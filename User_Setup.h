@@ -15,16 +15,16 @@
 // ##################################################################################
 
 // Only define one driver, the other ones must be commented out
-#define ILI9341_DRIVER
-//#define ST7735_DRIVER
-//#define ILI9163_DRIVER
-//#define S6D02A1_DRIVER
-//#define RPI_ILI9486_DRIVER // 20MHz maximum SPI
-//#define HX8357D_DRIVER
-//#define ILI9481_DRIVER
-//#define ILI9486_DRIVER
-//#define ILI9488_DRIVER
-//#define ST7789_DRIVER
+// #define ILI9341_DRIVER
+// #define ST7735_DRIVER
+// #define ILI9163_DRIVER
+// #define S6D02A1_DRIVER
+// #define RPI_ILI9486_DRIVER // 20MHz maximum SPI
+// #define HX8357D_DRIVER
+// #define ILI9481_DRIVER
+// #define ILI9486_DRIVER
+// #define ILI9488_DRIVER
+#define ST7789_DRIVER
 
 // For M5Stack ESP32 module with integrated display ONLY, remove // in line below
 //#define M5STACK
@@ -33,7 +33,7 @@
 // #define TFT_WIDTH  80
 // #define TFT_WIDTH  128
 // #define TFT_HEIGHT 160
-//#define TFT_HEIGHT 128
+// #define TFT_HEIGHT 128
 
 // For ST7735 ONLY, define the type of display, originally this was based on the
 // colour of the tab on the screen protector film but this is not always true, so try
@@ -49,7 +49,7 @@
 // #define ST7735_GREENTAB128 // For 128 x 128 display
 // #define ST7735_GREENTAB160x80 // For 160 x 80 display (BGR, inverted, 26 offset)
 // #define ST7735_REDTAB
-//#define ST7735_BLACKTAB
+// #define ST7735_BLACKTAB
 
 // ##################################################################################
 //
@@ -91,9 +91,9 @@
 // ###### EDIT THE PIN NUMBERS IN THE LINES FOLLOWING TO SUIT YOUR ESP8266 SETUP ######
 
 // For NodeMCU - use pin numbers in the form PIN_Dx where Dx is the NodeMCU pin designation
-#define TFT_CS   PIN_D8  // Chip select control pin D8
-#define TFT_DC   PIN_D3  // Data Command control pin
-#define TFT_RST  PIN_D4  // Reset pin (could connect to NodeMCU RST, see next line)
+#define TFT_CS   5  // Chip select control pin D8
+#define TFT_DC   16  // Data Command control pin
+#define TFT_RST  17  // Reset pin (could connect to NodeMCU RST, see next line)
 //#define TFT_RST  -1  // Set TFT_RST to -1 if the display RESET is connected to NodeMCU RST or 3.3V
 
 //#define TOUCH_CS PIN_D2     // Chip select pin (T_CS) of touch screen
@@ -234,8 +234,8 @@
 // #define SPI_FREQUENCY   5000000
 // #define SPI_FREQUENCY  10000000
 // #define SPI_FREQUENCY  20000000
-#define SPI_FREQUENCY  27000000 // Actually sets it to 26.67MHz = 80/3
-// #define SPI_FREQUENCY  40000000 // Maximum to use SPIFFS
+// #define SPI_FREQUENCY  27000000 // Actually sets it to 26.67MHz = 80/3
+#define SPI_FREQUENCY  40000000 // Maximum to use SPIFFS
 // #define SPI_FREQUENCY  80000000
 
 #define SPI_READ_FREQUENCY  20000000 // Optional reduced SPI frequency for reading TFT

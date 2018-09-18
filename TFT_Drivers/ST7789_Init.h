@@ -114,7 +114,9 @@
 
   writecommand(ST7789_DISPON);    //Display on
 
+#ifdef TFT_BL
   // Turn on the back-light LED
   digitalWrite(TFT_BL, HIGH);
   pinMode(TFT_BL, OUTPUT);
+#endif
 }
