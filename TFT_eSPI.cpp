@@ -356,6 +356,9 @@ void TFT_eSPI::init(uint8_t tc)
 #elif defined (ST7789_DRIVER)
     #include "TFT_Drivers/ST7789_Init.h"
 
+#elif defined (ILI9225_DRIVER)
+    #include "TFT_Drivers/ILI9225_Init.h"
+
 #endif
 
   spi_end();
@@ -403,6 +406,9 @@ void TFT_eSPI::setRotation(uint8_t m)
 
 #elif defined (ST7789_DRIVER)
     #include "TFT_Drivers/ST7789_Rotation.h"
+
+#elif defined (ILI9225_DRIVER)
+    #include "TFT_Drivers/ILI9225_Rotation.h"
 
 #endif
 
@@ -2684,6 +2690,72 @@ inline void TFT_eSPI::setAddrWindow(int32_t x0, int32_t y0, int32_t x1, int32_t 
   y1+=rowstart;
 #endif
 
+int32_t h1, h2, v1, v2;
+
+#ifdef ILI9225_DRIVER
+  switch ( rotation ) {
+    case 0:
+      h1 = x1;
+      h2 = x0;
+      v1 = y1;
+      v2 = y0;
+      break;
+    case 1:
+      h1 = y1;
+      h2 = y0;
+      v1 = TFT_HEIGHT - 1 - x0;
+      v2 = TFT_HEIGHT - 1 - x1;
+      break;
+    case 2:
+      h1 = TFT_WIDTH - 1 - x0;
+      h2 = TFT_WIDTH - 1 - x1;
+      v1 = TFT_HEIGHT - 1 - y0;
+      v2 = TFT_HEIGHT - 1 - y1;
+      break;
+    case 3:
+      h1 = TFT_WIDTH - 1 - y0;
+      h2 = TFT_WIDTH - 1 - y1;
+      v1 = x1;
+      v2 = x0;
+  }
+
+  CS_L;
+
+  // Column addr set
+  DC_C;
+  tft_Write_8(ILI9225_HORIZONTAL_WINDOW_ADDR1);
+  DC_D;
+  tft_Write_16(h1);
+  DC_C;
+  tft_Write_8(ILI9225_HORIZONTAL_WINDOW_ADDR2);
+  DC_D;
+  tft_Write_16(h2);
+
+  // Row addr set
+  DC_C;
+  tft_Write_8(ILI9225_VERTICAL_WINDOW_ADDR1);
+  DC_D;
+  tft_Write_16(v1);
+  DC_C;
+  tft_Write_8(ILI9225_VERTICAL_WINDOW_ADDR2);
+  DC_D;
+  tft_Write_16(v2);
+
+  DC_C;
+  tft_Write_8(ILI9225_RAM_ADDR_SET1);
+  DC_D;
+  tft_Write_16(h1);
+  DC_C;
+  tft_Write_8(ILI9225_RAM_ADDR_SET2);
+  DC_D;
+  tft_Write_16(v1);
+
+  // write to RAM
+  DC_C;
+  tft_Write_8(ILI9225_GRAM_DATA_REG);
+
+  DC_D;
+#else
 #if !defined (RPI_ILI9486_DRIVER)
   uint32_t xaw = ((uint32_t)x0 << 16) | x1;
   uint32_t yaw = ((uint32_t)y0 << 16) | y1;
@@ -2723,6 +2795,8 @@ inline void TFT_eSPI::setAddrWindow(int32_t x0, int32_t y0, int32_t x1, int32_t 
   tft_Write_8(TFT_RAMWR);
 
   DC_D;
+
+#endif // end IPI9225_DRIVER check
 
   //spi_end();
 }
@@ -2804,6 +2878,9 @@ void TFT_eSPI::readAddrWindow(int32_t xs, int32_t ys, int32_t xe, int32_t ye)
 
 void TFT_eSPI::readAddrWindow(int32_t x0, int32_t y0, int32_t x1, int32_t y1)
 {
+#ifdef ILI9225_DRIVER
+  setAddrWindow(x0, y0, x1, y1);
+#else
   //spi_begin();
 
   addr_col = 0xFFFF;
@@ -2845,6 +2922,7 @@ void TFT_eSPI::readAddrWindow(int32_t x0, int32_t y0, int32_t x1, int32_t y1)
   DC_D;
 
   //spi_end();
+#endif
 }
 
 #endif
@@ -3050,6 +3128,12 @@ void TFT_eSPI::drawPixel(uint32_t x, uint32_t y, uint32_t color)
   y+=rowstart;
 #endif
 
+#ifdef ILI9225_DRIVER
+  setAddrWindow(x, y, x, y);
+  tft_Write_16(color);
+
+  CS_H;
+#else
 #if !defined (RPI_ILI9486_DRIVER)
   uint32_t xaw = ((uint32_t)x << 16) | x;
   uint32_t yaw = ((uint32_t)y << 16) | y;
@@ -3104,6 +3188,7 @@ void TFT_eSPI::drawPixel(uint32_t x, uint32_t y, uint32_t color)
   tft_Write_16(color);
 
   CS_H;
+#endif
 
   spi_end();
 }

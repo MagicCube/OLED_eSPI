@@ -21,29 +21,30 @@
 
 #include <User_Setup.h>           // Default setup is root library folder
 
-//#include <User_Setups/Setup1_ILI9341.h>  // Setup file configured for my ILI9341
-//#include <User_Setups/Setup2_ST7735.h>   // Setup file configured for my ST7735
-//#include <User_Setups/Setup3_ILI9163.h>  // Setup file configured for my ILI9163
-//#include <User_Setups/Setup4_S6D02A1.h>  // Setup file configured for my S6D02A1
-//#include <User_Setups/Setup5_RPi_ILI9486.h>     // Setup file configured for my stock RPi TFT
-//#include <User_Setups/Setup6_RPi_Wr_ILI9486.h>  // Setup file configured for my modified RPi TFT
-//#include <User_Setups/Setup7_ST7735_128x128.h>  // Setup file configured for my ST7735 128x128 display
-//#include <User_Setups/Setup8_ILI9163_128x128.h>  // Setup file configured for my ILI9163 128x128 display
-//#include <User_Setups/Setup9_ST7735_Overlap.h>   // Setup file configured for my ST7735
-//#include <User_Setups/Setup10_RPi_touch_ILI9486.h>  // Setup file configured for ESP8266 and RPi TFT with touch
-//#include <User_Setups/Setup11_RPi_touch_ILI9486.h>  // Setup file configured for ESP32 and RPi TFT with touch
-//#include <User_Setups/Setup12_M5Stack.h>           // Setup file for the ESP32 based M5Stack
-//#include <User_Setups/Setup13_ILI9481_Parallel.h>  // Setup file for the ESP32 with parallel bus TFT
-//#include <User_Setups/Setup14_ILI9341_Parallel.h>  // Setup file for the ESP32 with parallel bus TFT
-//#include <User_Setups/Setup15_HX8357D.h>           // Setup file configured for HX8357D (untested)
-//#include <User_Setups/Setup16_ILI9488_Parallel.h>  // Setup file for the ESP32 with parallel bus TFT
-//#include <User_Setups/Setup17_ePaper.h>            // Setup file for any Waveshare ePaper display
-//#include <User_Setups/Setup18_ST7789.h>            // Setup file configured for HX8357D (untested)
+// #include <User_Setups/Setup1_ILI9341.h>  // Setup file configured for my ILI9341
+// #include <User_Setups/Setup2_ST7735.h>   // Setup file configured for my ST7735
+// #include <User_Setups/Setup3_ILI9163.h>  // Setup file configured for my ILI9163
+// #include <User_Setups/Setup4_S6D02A1.h>  // Setup file configured for my S6D02A1
+// #include <User_Setups/Setup5_RPi_ILI9486.h>     // Setup file configured for my stock RPi TFT
+// #include <User_Setups/Setup6_RPi_Wr_ILI9486.h>  // Setup file configured for my modified RPi TFT
+// #include <User_Setups/Setup7_ST7735_128x128.h>  // Setup file configured for my ST7735 128x128 display
+// #include <User_Setups/Setup8_ILI9163_128x128.h>  // Setup file configured for my ILI9163 128x128 display
+// #include <User_Setups/Setup9_ST7735_Overlap.h>   // Setup file configured for my ST7735
+// #include <User_Setups/Setup10_RPi_touch_ILI9486.h>  // Setup file configured for ESP8266 and RPi TFT with touch
+// #include <User_Setups/Setup11_RPi_touch_ILI9486.h>  // Setup file configured for ESP32 and RPi TFT with touch
+// #include <User_Setups/Setup12_M5Stack.h>           // Setup file for the ESP32 based M5Stack
+// #include <User_Setups/Setup13_ILI9481_Parallel.h>  // Setup file for the ESP32 with parallel bus TFT
+// #include <User_Setups/Setup14_ILI9341_Parallel.h>  // Setup file for the ESP32 with parallel bus TFT
+// #include <User_Setups/Setup15_HX8357D.h>           // Setup file configured for HX8357D (untested)
+// #include <User_Setups/Setup16_ILI9488_Parallel.h>  // Setup file for the ESP32 with parallel bus TFT
+// #include <User_Setups/Setup17_ePaper.h>            // Setup file for any Waveshare ePaper display
+// #include <User_Setups/Setup18_ST7789.h>            // Setup file configured for ST7789
 
-//#include <User_Setups/Setup20_ILI9488.h>           // Setup file for ESP8266 and ILI9488 SPI bus TFT
-//#include <User_Setups/Setup21_ILI9488.h>           // Setup file for ESP32 and ILI9488 SPI bus TFT
+// #include <User_Setups/Setup20_ILI9488.h>           // Setup file for ESP8266 and ILI9488 SPI bus TFT
+// #include <User_Setups/Setup21_ILI9488.h>           // Setup file for ESP32 and ILI9488 SPI bus TFT
+// #include <User_Setups/Setup22_ILI9225.h>           // Setup file for configured for ILI9225
 
-//#include <User_Setups/SetupX_Template.h>
+// #include <User_Setups/SetupX_Template.h>
 
 
 #endif // USER_SETUP_LOADED
@@ -92,6 +93,9 @@
 #elif defined (ST7789_DRIVER)
      #include "TFT_Drivers/ST7789_Defines.h"
      #define  TFT_DRIVER 0x7789
+#elif defined (ILI9225_DRIVER)
+     #include "TFT_Drivers/ILI9225_Defines.h"
+     #define  TFT_DRIVER 0x9225
 #elif defined (XYZZY_DRIVER)  // <<<<<<<<<<<<<<<<<<<<<<<< ADD NEW DRIVER HERE
      #include "TFT_Drivers/XYZZY_Defines.h"
      #define  TFT_DRIVER 0x0000
