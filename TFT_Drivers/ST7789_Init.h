@@ -119,4 +119,9 @@
   digitalWrite(TFT_BL, HIGH);
   pinMode(TFT_BL, OUTPUT);
 #endif
+
+#ifdef CGRAM_OFFSET
+  colstart = 0;
+  rowstart = 0;
+#endif
 }
