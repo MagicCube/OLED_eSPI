@@ -306,15 +306,12 @@ void TFT_eSPI::init(uint8_t tc)
   // Toggle RST low to reset
   spi_begin();
 
-#ifdef TFT_RST
-  if (TFT_RST >= 0) {
-    digitalWrite(TFT_RST, HIGH);
-    delay(5);
-    digitalWrite(TFT_RST, LOW);
-    delay(20);
-    digitalWrite(TFT_RST, HIGH);
-  }
-  else writecommand(TFT_SWRST); // Software reset
+#if (TFT_RST > 0)
+  digitalWrite(TFT_RST, HIGH);
+  delay(5);
+  digitalWrite(TFT_RST, LOW);
+  delay(20);
+  digitalWrite(TFT_RST, HIGH);
 #else
   writecommand(TFT_SWRST); // Software reset
 #endif
@@ -358,6 +355,9 @@ void TFT_eSPI::init(uint8_t tc)
 
 #elif defined (ILI9225_DRIVER)
     #include "TFT_Drivers/ILI9225_Init.h"
+
+#elif defined (HX8352C_DRIVER)
+    #include "TFT_Drivers/HX8352C_Init.h"
 
 #endif
 
@@ -409,6 +409,9 @@ void TFT_eSPI::setRotation(uint8_t m)
 
 #elif defined (ILI9225_DRIVER)
     #include "TFT_Drivers/ILI9225_Rotation.h"
+
+#elif defined (HX8352C_DRIVER)
+    #include "TFT_Drivers/HX8352C_Rotation.h"
 
 #endif
 
