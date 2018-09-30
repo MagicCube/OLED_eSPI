@@ -24,6 +24,7 @@
 #include <User_Setup.h>           // Default setup is root library folder
 
 // #include <User_Setups/Setup_ePaper.h>            // Setup file for any Waveshare ePaper display
+// #include <User_Setups/Setup_HX8352C.h>           // Setup file for HX8352C
 // #include <User_Setups/Setup_HX8357D.h>           // Setup file for HX8357D (untested)
 // #include <User_Setups/Setup_ILI9163_128x128.h>   // Setup file for ILI9163 128x128 display
 // #include <User_Setups/Setup_ILI9163.h>           // Setup file for ILI9163
@@ -91,6 +92,9 @@
 #elif defined (ILI9225_DRIVER)
      #include "TFT_Drivers/ILI9225_Defines.h"
      #define  TFT_DRIVER 0x9225
+#elif defined (HX8352C_DRIVER)
+     #include "TFT_Drivers/HX8352C_Defines.h"
+     #define  TFT_DRIVER 0x8352
 #elif defined (XYZZY_DRIVER)  // <<<<<<<<<<<<<<<<<<<<<<<< ADD NEW DRIVER HERE
      #include "TFT_Drivers/XYZZY_Defines.h"
      #define  TFT_DRIVER 0x0000

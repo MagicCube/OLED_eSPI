@@ -682,6 +682,8 @@ class TFT_eSPI : public Print {
            textdatum, // Text reference datum
            rotation;  // Display rotation (0-3)
 
+  bool     invertcolor; // invert display color
+
  private:
 
   inline void spi_begin() __attribute__((always_inline));

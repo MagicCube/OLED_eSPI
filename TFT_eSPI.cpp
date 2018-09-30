@@ -166,6 +166,7 @@ TFT_eSPI::TFT_eSPI(int16_t w, int16_t h)
   _init_width  = _width  = w; // Set by specific xxxxx_Defines.h file or by users sketch
   _init_height = _height = h; // Set by specific xxxxx_Defines.h file or by users sketch
   rotation  = 0;
+  invertcolor = false;
   cursor_y  = cursor_x  = 0;
   textfont  = 1;
   textsize  = 1;
@@ -2695,7 +2696,51 @@ inline void TFT_eSPI::setAddrWindow(int32_t x0, int32_t y0, int32_t x1, int32_t 
 
 int32_t h1, h2, v1, v2;
 
-#ifdef ILI9225_DRIVER
+#ifdef HX8352C_DRIVER
+  CS_L;
+
+  // Column addr set
+  DC_C;
+  tft_Write_8(0x02);
+  DC_D;
+  tft_Write_8(x0>>8);
+  DC_C;
+  tft_Write_8(0x03);
+  DC_D;
+  tft_Write_8(x0&0xff);
+  DC_C;
+  tft_Write_8(0x04);
+  DC_D;
+  tft_Write_8(x1>>8);
+  DC_C;
+  tft_Write_8(0x05);
+  DC_D;
+  tft_Write_8(x1&0xff);
+
+  // Row addr set
+  DC_C;
+  tft_Write_8(0x06);
+  DC_D;
+  tft_Write_8(y0>>8);
+  DC_C;
+  tft_Write_8(0x07);
+  DC_D;
+  tft_Write_8(y0&0xff);
+  DC_C;
+  tft_Write_8(0x08);
+  DC_D;
+  tft_Write_8(y1>>8);
+  DC_C;
+  tft_Write_8(0x09);
+  DC_D;
+  tft_Write_8(y1&0xff);
+
+  // write to RAM
+  DC_C;
+  tft_Write_8(0x22);
+
+  DC_D;
+#elif defined (ILI9225_DRIVER)
   switch ( rotation ) {
     case 0:
       h1 = x1;
@@ -2881,7 +2926,7 @@ void TFT_eSPI::readAddrWindow(int32_t xs, int32_t ys, int32_t xe, int32_t ye)
 
 void TFT_eSPI::readAddrWindow(int32_t x0, int32_t y0, int32_t x1, int32_t y1)
 {
-#ifdef ILI9225_DRIVER
+#if defined (HX8352C_DRIVER) || defined (ILI9225_DRIVER)
   setAddrWindow(x0, y0, x1, y1);
 #else
   //spi_begin();
@@ -3131,7 +3176,7 @@ void TFT_eSPI::drawPixel(uint32_t x, uint32_t y, uint32_t color)
   y+=rowstart;
 #endif
 
-#ifdef ILI9225_DRIVER
+#if defined (HX8352C_DRIVER) || defined (ILI9225_DRIVER)
   setAddrWindow(x, y, x, y);
   tft_Write_16(color);
 
@@ -3779,10 +3824,16 @@ uint16_t TFT_eSPI::color8to16(uint8_t color)
 ***************************************************************************************/
 void TFT_eSPI::invertDisplay(boolean i)
 {
+  invertcolor = i;
+
   spi_begin();
+#ifdef HX8352C_DRIVER
+  setRotation(rotation); // set invert color by re-setup display parameters
+#else
   // Send the command twice as otherwise it does not always work!
   writecommand(i ? TFT_INVON : TFT_INVOFF);
   writecommand(i ? TFT_INVON : TFT_INVOFF);
+#endif
   spi_end();
 }
 

@@ -15,17 +15,19 @@
 // ##################################################################################
 
 // Only define one driver, the other ones must be commented out
-// #define ILI9341_DRIVER
-// #define ST7735_DRIVER
-// #define ILI9163_DRIVER
-// #define S6D02A1_DRIVER
-// #define RPI_ILI9486_DRIVER // 20MHz maximum SPI
+// #define EPD_DRIVER // ePaper driver
+// #define HX8352C_DRIVER
 // #define HX8357D_DRIVER
+// #define ILI9163_DRIVER
+// #define ILI9225_DRIVER
+// #define ILI9341_DRIVER
 // #define ILI9481_DRIVER
 // #define ILI9486_DRIVER
 // #define ILI9488_DRIVER
+// #define RPI_ILI9486_DRIVER // 20MHz maximum SPI
+// #define S6D02A1_DRIVER
+// #define ST7735_DRIVER
 #define ST7789_DRIVER
-// #define ILI9225_DRIVER
 
 // For M5Stack ESP32 module with integrated display ONLY, remove // in line below
 //#define M5STACK

@@ -7,7 +7,7 @@
   #define TFT_HEIGHT 320
 #endif
 
-#if (TFT_HEIGHT == 240) && (TFT_WIDTH == 240)
+#if (TFT_HEIGHT != 320) || (TFT_WIDTH != 240)
   #define CGRAM_OFFSET
 #endif
 
@@ -16,7 +16,6 @@
 
 
 // Generic commands used by TFT_eSPI.cpp
-#define TFT_NOP     0x00
 #define TFT_SWRST   0x01
 
 #define TFT_SLPIN   0x10
