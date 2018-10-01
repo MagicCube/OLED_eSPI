@@ -33,6 +33,8 @@ void setup()
   Serial.println(F("TFT 1.8\" SPI TFT Test!     ")); 
  
   tft.init();            // initialize LCD
+  //tft.invertDisplay(true);
+  //tft.setRotation(3);
 }
 
 // NOTE: This demo should run, but may look odd on 128x128 LCD (vs 128x160)
@@ -58,12 +60,10 @@ void loop(void)
   Serial.println(usecFillScreen);
   delay(100);
 
-  tft.setRotation(1);
   uint32_t usecText = testText();
   Serial.print(F("Text                     "));
   Serial.println(usecText);
   delay(100);
-  tft.setRotation(0);
   
   uint32_t usecPixels = testPixels();
   Serial.print(F("Pixels                   "));
@@ -151,7 +151,7 @@ void loop(void)
   //tft.print((uint16_t)_end - (uint16_t)__data_start, HEX);
 
   tft.setTextColor(TFT_GREEN);
-  tft.print(F("Benchmark        usec"));
+  tft.println(F("Benchmark        usec"));
 
   tft.setTextColor(TFT_CYAN);
   tft.print(F("HaD logo   "));
@@ -246,7 +246,7 @@ void printnice(int32_t v)
     memmove(str+1, str, strlen(str)+1);
     *str = ' ';
   }
-  tft.print(str);
+  tft.println(str);
 }
 
 static inline uint32_t micros_start() __attribute__ ((always_inline));
@@ -315,7 +315,7 @@ uint32_t testHaD()
   
   for (int i = 0; i < 0x10; i++)
   {
-    tft.setAddrWindow(0, 0, tft.width()-1, tft.height()-1);
+    tft.setAddrWindow(0, 0, 128-1, 160-1);
 
     uint16_t cnt = 0;
     uint16_t color = tft.color565((i << 4) | i, (i << 4) | i, (i << 4) | i);
@@ -339,7 +339,7 @@ uint32_t testHaD()
 
   tft.setTextColor(TFT_YELLOW);
   tft.setCursor(0, 145);
-  tft.print(F(" http://hackaday.io/"));
+  tft.println(F(" http://hackaday.io/"));
   tft.print(F("         Xark"));
 
   delay(3 * 1000L);
@@ -382,8 +382,8 @@ uint32_t testText() {
   tft.setTextColor(TFT_GREEN);
   tft.setTextSize(2);
   tft.println(F("Groop"));
-  tft.println(F("I implore thee,"));
   tft.setTextSize(1);
+  tft.println(F("I implore thee,"));
   tft.println(F("my foonting turlingdromes."));
   tft.println(F("And hooptiously drangle me"));
   tft.println(F("with crinkly bindlewurdles,"));
@@ -556,8 +556,7 @@ uint32_t testFilledRects(uint16_t color1, uint16_t color2)
   int32_t cy = tft.height() / 2 - 1;
 
   tft.fillScreen(TFT_BLACK);
-  n = min(tft.width(), tft.height());
-  for (i = n; i > 0; i -= 6)
+  for (i = min(tft.width(), tft.height()) - 1; i > 0; i -= 6)
   {
     i2 = i / 2;
 
@@ -676,7 +675,7 @@ uint32_t testRoundRects()
   
   start = micros_start();
 
-  for (i = 0; i < w; i += 6)
+  for (i = 6; i < w; i += 6)
   {
     i2 = i / 2;
     tft.drawRoundRect(cx-i2, cy-i2, i, i, i/8, tft.color565(i, 0, 0));
@@ -696,7 +695,7 @@ uint32_t testFilledRoundRects()
 
   start = micros_start();
 
-  for (i = min(tft.width(), tft.height()); i > 20; i -= 6)
+  for (i = min(tft.width(), tft.height()) - 1; i > 20; i -= 6)
   {
     i2 = i / 2;
     tft.fillRoundRect(cx-i2, cy-i2, i, i, i/8, tft.color565(0, i, 0));
