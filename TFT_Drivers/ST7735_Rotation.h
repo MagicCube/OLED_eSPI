@@ -8,6 +8,10 @@
     case 0:
      if (tabcolor == INITR_BLACKTAB) {
        writedata(TFT_MAD_MX | TFT_MAD_MY | TFT_MAD_RGB);
+     } else if(tabcolor == INITR_GREENTAB) {
+       writedata(TFT_MAD_MX | TFT_MAD_MY | TFT_MAD_BGR);
+       colstart = 2;
+       rowstart = 1;
      } else if(tabcolor == INITR_GREENTAB2) {
        writedata(TFT_MAD_MX | TFT_MAD_MY | TFT_MAD_RGB);
        colstart = 2;
@@ -35,6 +39,10 @@
     case 1:
      if (tabcolor == INITR_BLACKTAB) {
        writedata(TFT_MAD_MY | TFT_MAD_MV | TFT_MAD_RGB);
+     } else if(tabcolor == INITR_GREENTAB) {
+       writedata(TFT_MAD_MY | TFT_MAD_MV | TFT_MAD_BGR);
+       colstart = 1;
+       rowstart = 2;
      } else if(tabcolor == INITR_GREENTAB2) {
        writedata(TFT_MAD_MY | TFT_MAD_MV | TFT_MAD_RGB);
        colstart = 1;
@@ -62,6 +70,10 @@
     case 2:
      if (tabcolor == INITR_BLACKTAB) {
        writedata(TFT_MAD_RGB);
+     } else if(tabcolor == INITR_GREENTAB) {
+       writedata(TFT_MAD_BGR);
+       colstart = 2;
+       rowstart = 1;
      } else if(tabcolor == INITR_GREENTAB2) {
        writedata(TFT_MAD_RGB);
        colstart = 2;
@@ -89,6 +101,10 @@
     case 3:
      if (tabcolor == INITR_BLACKTAB) {
        writedata(TFT_MAD_MX | TFT_MAD_MV | TFT_MAD_RGB);
+     } else if(tabcolor == INITR_GREENTAB) {
+       writedata(TFT_MAD_MX | TFT_MAD_MV | TFT_MAD_BGR);
+       colstart = 1;
+       rowstart = 2;
      } else if(tabcolor == INITR_GREENTAB2) {
        writedata(TFT_MAD_MX | TFT_MAD_MV | TFT_MAD_RGB);
        colstart = 1;
@@ -113,27 +129,4 @@
       _width  = _init_height;
       _height = _init_width;
       break;
-
-  // These next rotations are for bottum up BMP drawing
-  /*  case 4:
-      writedata(ST7735_TFT_MAD_MX | ST7735_TFT_MAD_MY | ST7735_TFT_MAD_BGR);
-      _width  = _init_width;
-      _height = _init_height;
-      break;
-    case 5:
-      writedata(ST7735_TFT_MAD_MV | ST7735_TFT_MAD_MX | ST7735_TFT_MAD_BGR);
-      _width  = _init_height;
-      _height = _init_width;
-      break;
-    case 6:
-      writedata(ST7735_TFT_MAD_BGR);
-      _width  = _init_width;
-      _height = _init_height;
-      break;
-    case 7:
-      writedata(ST7735_TFT_MAD_MY | ST7735_TFT_MAD_MV | ST7735_TFT_MAD_BGR);
-      _width  = _init_height;
-      _height = _init_width;
-      break;
-  */
   }
