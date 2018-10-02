@@ -44,8 +44,6 @@
 #define TFT_MAD_SS  0x02
 #define TFT_MAD_GS  0x01
 
-#define TFT_IDXRD   0x00 // ILI9341 only, indexed control register read
-
 // ST7789 specific commands used in init
 #define ST7789_NOP			0x00
 #define ST7789_SWRESET		0x01

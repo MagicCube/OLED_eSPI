@@ -12,7 +12,6 @@
 #define TFT_RAMWR   0x00
 
 #define TFT_RAMRD   0x00
-#define TFT_IDXRD   0x00
 
 #define TFT_MADCTL  0x00
 #define TFT_MAD_MY  0x00

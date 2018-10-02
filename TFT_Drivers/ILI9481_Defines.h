@@ -38,5 +38,3 @@
 #define TFT_MAD_MH  0x04
 #define TFT_MAD_SS  0x02
 #define TFT_MAD_GS  0x01
-
-#define TFT_IDXRD   0x00 // ILI9341 only, indexed control register read

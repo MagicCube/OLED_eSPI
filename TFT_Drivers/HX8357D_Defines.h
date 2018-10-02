@@ -39,9 +39,6 @@
 #define TFT_MAD_SS  0x02
 #define TFT_MAD_GS  0x01
 
-#define TFT_IDXRD   0x00 // ILI9341 only, indexed control register read
-
-
 #define HX8357_NOP     0x00
 #define HX8357_SWRESET 0x01
 #define HX8357_RDDID   0x04
