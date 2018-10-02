@@ -1,18 +1,22 @@
 
-// This is the command sequence that initialises the ILI9488 driver
+// This is the command sequence that initialises the ILI9486 driver
 //
 // This setup information uses simple 8 bit SPI writecommand() and writedata() functions
 //
 // See ST7735_Setup.h file for an alternative format
 
-// Configure ILI9486 display
+{
+// From https://github.com/notro/fbtft/blob/master/fb_ili9486.c
 
-    writecommand(TFT_SLPOUT); //Exit Sleep
+    //writecommand(0x01); // SW reset
+    //delay(120);
+	
+    writecommand(0x11); // Sleep out, also SW reset
     delay(120);
 
     writecommand(0x3A);
-    writedata(0x66);
-
+    writedata(0x55);
+ 
     writecommand(0xC2);
     writedata(0x44);
 
@@ -38,7 +42,7 @@
     writedata(0x11);
     writedata(0x0D);
     writedata(0x00);
-
+ 
     writecommand(0xE1);
     writedata(0x0F);
     writedata(0x32);
@@ -55,13 +59,12 @@
     writedata(0x24);
     writedata(0x20);
     writedata(0x00);
+ 
+    writecommand(0x20);                     // display inversion OFF
+  
+    writecommand(0x36);
+    writedata(0x48);
 
-    writecommand(TFT_INVOFF);
-
-    writecommand(TFT_MADCTL); // Memory Access Control
-    writedata(0x48);          // MX, BGR
-
-    writecommand(TFT_DISPON); //Display on
-    delay(25);
-
-// End of ILI9486 display configuration
+    writecommand(0x29);                     // display on
+    delay(150);
+}

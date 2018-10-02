@@ -337,7 +337,7 @@ void TFT_eSPI::init(uint8_t tc)
     #include "TFT_Drivers/S6D02A1_Init.h"
      
 #elif defined (RPI_ILI9486_DRIVER)
-    #include "TFT_Drivers/ILI9486_Init.h"
+    #include "TFT_Drivers/RPI_ILI9486_Init.h"
 
 #elif defined (ILI9486_DRIVER)
     #include "TFT_Drivers/ILI9486_Init.h"
@@ -391,7 +391,7 @@ void TFT_eSPI::setRotation(uint8_t m)
     #include "TFT_Drivers/S6D02A1_Rotation.h"
 
 #elif defined (RPI_ILI9486_DRIVER)
-    #include "TFT_Drivers/ILI9486_Rotation.h"
+    #include "TFT_Drivers/RPI_ILI9486_Rotation.h"
 
 #elif defined (ILI9486_DRIVER)
     #include "TFT_Drivers/ILI9486_Rotation.h"
@@ -599,7 +599,7 @@ uint16_t TFT_eSPI::readPixel(int32_t x0, int32_t y0)
   // Fetch the 16 bit BRG pixel
   //uint16_t rgb = (readByte() << 8) | readByte();
 
-  #if defined (ILI9341_DRIVER) | defined (ILI9488_DRIVER) // Read 3 bytes
+  #if defined (ILI9341_DRIVER) || defined (ILI9486_DRIVER) || defined (ILI9488_DRIVER) // Read 3 bytes
 
   // Read window pixel 24 bit RGB values and fill in LS bits
   uint16_t rgb = ((readByte() & 0xF8) << 8) | ((readByte() & 0xFC) << 3) | (readByte() >> 3);
@@ -636,7 +636,7 @@ uint16_t TFT_eSPI::readPixel(int32_t x0, int32_t y0)
 
     // Read the 3 RGB bytes, colour is actually only in the top 6 bits of each byte
     // as the TFT stores colours as 18 bits
-  #if !defined (ILI9488_DRIVER)
+  #if !defined (ILI9486_DRIVER) && !defined (ILI9488_DRIVER)
     uint8_t r = tft_Write_8(0);
     uint8_t g = tft_Write_8(0);
     uint8_t b = tft_Write_8(0);
@@ -734,7 +734,7 @@ void TFT_eSPI::readRect(uint32_t x, uint32_t y, uint32_t w, uint32_t h, uint16_t
   // Total pixel count
   uint32_t len = w * h;
 
-#if defined (ILI9341_DRIVER) | defined (ILI9488_DRIVER) // Read 3 bytes
+#if defined (ILI9341_DRIVER) || defined (ILI9486_DRIVER) || defined (ILI9488_DRIVER) // Read 3 bytes
   // Fetch the 24 bit RGB value
   while (len--) {
     // Assemble the RGB 16 bit colour
@@ -776,7 +776,7 @@ void TFT_eSPI::readRect(uint32_t x, uint32_t y, uint32_t w, uint32_t h, uint16_t
 
     // Read the 3 RGB bytes, colour is actually only in the top 6 bits of each byte
     // as the TFT stores colours as 18 bits
-  #if !defined (ILI9488_DRIVER)
+  #if !defined (ILI9486_DRIVER) && !defined (ILI9488_DRIVER)
     uint8_t r = tft_Write_8(0);
     uint8_t g = tft_Write_8(0);
     uint8_t b = tft_Write_8(0);
@@ -1362,7 +1362,7 @@ void  TFT_eSPI::readRectRGB(int32_t x0, int32_t y0, int32_t w, int32_t h, uint8_
 
     // Read the 3 RGB bytes, colour is actually only in the top 6 bits of each byte
     // as the TFT stores colours as 18 bits
-  #if !defined (ILI9488_DRIVER)
+  #if !defined (ILI9486_DRIVER) && !defined (ILI9488_DRIVER)
     *data++ = tft_Write_8(0);
     *data++ = tft_Write_8(0);
     *data++ = tft_Write_8(0);
@@ -2241,7 +2241,7 @@ void TFT_eSPI::drawChar(int32_t x, int32_t y, unsigned char c, uint32_t color, u
     for (int8_t i = 0; i < 5; i++ ) column[i] = pgm_read_byte(font + (c * 5) + i);
     column[5] = 0;
 
-#if defined (ESP8266) && !defined (ILI9488_DRIVER)
+#if defined (ESP8266) && !defined (ILI9486_DRIVER) && !defined (ILI9488_DRIVER)
     color = (color >> 8) | (color << 8);
     bg = (bg >> 8) | (bg << 8);
     uint32_t spimask = ~((SPIMMOSI << SPILMOSI) | (SPIMMISO << SPILMISO));
@@ -3061,7 +3061,7 @@ void TFT_eSPI::drawPixel(uint32_t x, uint32_t y, uint32_t color)
 
   DC_D;
 
-#if  defined (ILI9488_DRIVER)
+#if defined (ILI9486_DRIVER) || defined (ILI9488_DRIVER)
   tft_Write_16(color);
 #else
   SPI1U1 = mask | (15 << SPILMOSI) | (15 << SPILMISO);
@@ -3307,7 +3307,7 @@ void TFT_eSPI::pushColors(uint8_t *data, uint32_t len)
 #else
   #ifdef ESP32_PARALLEL
     while (len--) {tft_Write_8(*data); data++;}
-  #elif  defined (ILI9488_DRIVER)
+  #elif defined (ILI9486_DRIVER) || defined (ILI9488_DRIVER)
     uint16_t color;
     while (len>1) {color = (*data++) | ((*data++)<<8); tft_Write_16(color); len-=2;}
   #else
@@ -3336,8 +3336,8 @@ void TFT_eSPI::pushColors(uint16_t *data, uint32_t len, bool swap)
 
   CS_L;
 
-#if defined (ESP32) || defined (ILI9488_DRIVER)
-  #if defined (ESP32_PARALLEL) || defined (ILI9488_DRIVER)
+#if defined (ESP32) || defined (ILI9486_DRIVER) || defined (ILI9488_DRIVER)
+  #if defined (ESP32_PARALLEL) || defined (ILI9486_DRIVER) || defined (ILI9488_DRIVER)
     if (swap) while ( len-- ) {tft_Write_16(*data); data++;}
     else while ( len-- ) {tft_Write_16S(*data); data++;}
   #else
@@ -3434,7 +3434,7 @@ void TFT_eSPI::pushColors(uint16_t *data, uint32_t len, bool swap)
 // Bresenham's algorithm - thx wikipedia - speed enhanced by Bodmer to use
 // an efficient FastH/V Line draw routine for line segments of 2 pixels or more
 
-#if defined (RPI_ILI9486_DRIVER) || defined (ESP32) || defined (RPI_WRITE_STROBE) || defined (HX8357D_DRIVER) || defined (ILI9488_DRIVER)
+#if defined (RPI_ILI9486_DRIVER) || defined (ESP32) || defined (RPI_WRITE_STROBE) || defined (HX8357D_DRIVER) || defined (ILI9486_DRIVER) || defined (ILI9488_DRIVER)
 
 void TFT_eSPI::drawLine(int32_t x0, int32_t y0, int32_t x1, int32_t y1, uint32_t color)
 {
@@ -4720,7 +4720,7 @@ void TFT_eSPI::setTextFont(uint8_t f)
 //       TFT_eSPI       98.06%              97.59%          94.24%
 //       Adafruit_GFX   19.62%              14.31%           7.94%
 //
-#if defined (ESP8266) && !defined (ILI9488_DRIVER)
+#if defined (ESP8266) && !defined (ILI9486_DRIVER) && !defined (ILI9488_DRIVER)
 void writeBlock(uint16_t color, uint32_t repeat)
 {
   uint16_t color16 = (color >> 8) | (color << 8);
@@ -4780,7 +4780,7 @@ void writeBlock(uint16_t color, uint32_t repeat)
   SPI1U = SPIUMOSI | SPIUDUPLEX | SPIUSSE;
 }
 
-#elif defined (ILI9488_DRIVER)
+#elif defined (ILI9486_DRIVER) || defined (ILI9488_DRIVER)
 
 #ifdef ESP8266
 void writeBlock(uint16_t color, uint32_t repeat)
