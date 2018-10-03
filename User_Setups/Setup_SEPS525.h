@@ -1,4 +1,4 @@
-#define ST7789_DRIVER
+#define SEPS525_DRIVER
 
 #define TFT_CS   PIN_D8  // Chip select control pin D8
 #define TFT_DC   PIN_D3  // Data Command control pin

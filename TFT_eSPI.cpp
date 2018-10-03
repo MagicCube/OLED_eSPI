@@ -360,6 +360,9 @@ void TFT_eSPI::init(uint8_t tc)
 #elif defined (HX8352C_DRIVER)
     #include "TFT_Drivers/HX8352C_Init.h"
 
+#elif defined (SEPS525_DRIVER)
+    #include "TFT_Drivers/SEPS525_Init.h"
+
 #endif
 
   spi_end();
@@ -413,6 +416,9 @@ void TFT_eSPI::setRotation(uint8_t m)
 
 #elif defined (HX8352C_DRIVER)
     #include "TFT_Drivers/HX8352C_Rotation.h"
+
+#elif defined (SEPS525_DRIVER)
+    #include "TFT_Drivers/SEPS525_Rotation.h"
 
 #endif
 
@@ -2694,8 +2700,6 @@ inline void TFT_eSPI::setAddrWindow(int32_t x0, int32_t y0, int32_t x1, int32_t 
   y1+=rowstart;
 #endif
 
-int32_t h1, h2, v1, v2;
-
 #ifdef HX8352C_DRIVER
   CS_L;
 
@@ -2740,7 +2744,82 @@ int32_t h1, h2, v1, v2;
   tft_Write_8(0x22);
 
   DC_D;
+#elif defined (SEPS525_DRIVER)
+  int32_t h1, h2, v1, v2, apx, apy;
+
+  switch ( rotation ) {
+    case 0:
+      h1 = x0;
+      h2 = x1;
+      v1 = y0;
+      v2 = y1;
+      apx = h1;
+      apy = v1;
+      break;
+    case 1:
+      h1 = TFT_WIDTH - 1 - y1;
+      h2 = TFT_WIDTH - 1 - y0;
+      v1 = x0;
+      v2 = x1;
+      apx = h2;
+      apy = v1;
+      break;
+    case 2:
+      h1 = TFT_WIDTH - 1 - x1;
+      h2 = TFT_WIDTH - 1 - x0;
+      v1 = TFT_HEIGHT - 1 - y1;
+      v2 = TFT_HEIGHT - 1 - y0;
+      apx = h2;
+      apy = v2;
+      break;
+    case 3:
+      h1 = y0;
+      h2 = y1;
+      v1 = TFT_HEIGHT - 1 - x1;
+      v2 = TFT_HEIGHT - 1 - x0;
+      apx = h1;
+      apy = v2;
+  }
+
+  CS_L;
+
+  // Column addr set
+  DC_C;
+  tft_Write_8(MX1_ADDR);
+  DC_D;
+  tft_Write_16(h1);
+  DC_C;
+  tft_Write_8(MX2_ADDR);
+  DC_D;
+  tft_Write_16(h2);
+
+  // Row addr set
+  DC_C;
+  tft_Write_8(MY1_ADDR);
+  DC_D;
+  tft_Write_16(v1);
+  DC_C;
+  tft_Write_8(MY2_ADDR);
+  DC_D;
+  tft_Write_16(v2);
+
+  DC_C;
+  tft_Write_8(M_AP_X);
+  DC_D;
+  tft_Write_16(apx);
+  DC_C;
+  tft_Write_8(M_AP_Y);
+  DC_D;
+  tft_Write_16(apy);
+
+  // write to RAM
+  DC_C;
+  tft_Write_8(TFT_RAMWR);
+
+  DC_D;
 #elif defined (ILI9225_DRIVER)
+  int32_t h1, h2, v1, v2;
+
   switch ( rotation ) {
     case 0:
       h1 = x1;
@@ -2926,7 +3005,7 @@ void TFT_eSPI::readAddrWindow(int32_t xs, int32_t ys, int32_t xe, int32_t ye)
 
 void TFT_eSPI::readAddrWindow(int32_t x0, int32_t y0, int32_t x1, int32_t y1)
 {
-#if defined (HX8352C_DRIVER) || defined (ILI9225_DRIVER)
+#if defined (HX8352C_DRIVER) || defined (ILI9225_DRIVER) || defined (SEPS525_DRIVER)
   setAddrWindow(x0, y0, x1, y1);
 #else
   //spi_begin();
@@ -3176,7 +3255,7 @@ void TFT_eSPI::drawPixel(uint32_t x, uint32_t y, uint32_t color)
   y+=rowstart;
 #endif
 
-#if defined (HX8352C_DRIVER) || defined (ILI9225_DRIVER)
+#if defined (HX8352C_DRIVER) || defined (ILI9225_DRIVER) || defined (SEPS525_DRIVER)
   setAddrWindow(x, y, x, y);
   tft_Write_16(color);
 
@@ -3829,7 +3908,7 @@ void TFT_eSPI::invertDisplay(boolean i)
   spi_begin();
 #ifdef HX8352C_DRIVER
   setRotation(rotation); // set invert color by re-setup display parameters
-#else
+#elif TFT_INVON
   // Send the command twice as otherwise it does not always work!
   writecommand(i ? TFT_INVON : TFT_INVOFF);
   writecommand(i ? TFT_INVON : TFT_INVOFF);

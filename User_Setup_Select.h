@@ -95,6 +95,9 @@
 #elif defined (HX8352C_DRIVER)
      #include "TFT_Drivers/HX8352C_Defines.h"
      #define  TFT_DRIVER 0x8352
+#elif defined (SEPS525_DRIVER)
+     #include "TFT_Drivers/SEPS525_Defines.h"
+     #define  TFT_DRIVER 0x0525
 #elif defined (XYZZY_DRIVER)  // <<<<<<<<<<<<<<<<<<<<<<<< ADD NEW DRIVER HERE
      #include "TFT_Drivers/XYZZY_Defines.h"
      #define  TFT_DRIVER 0x0000
