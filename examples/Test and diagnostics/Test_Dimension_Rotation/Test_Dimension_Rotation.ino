@@ -69,7 +69,7 @@ void loop(void)
     tft.drawEllipse(w / 2, h / 2, (w / 2) - 4, (h / 2) - 4, TFT_BLACK);
     tft.drawEllipse(w / 2, h / 2, (w / 2) - 5, (h / 2) - 5, TFT_WHITE);
 
-    tft.drawTriangle(w / 2, 0, 0, h, w, h, TFT_RED);
+    tft.drawTriangle(w / 2, 0, 0, h - 1, w - 1, h - 1, TFT_RED);
 
     tft.fillRect(n - 32, n - 20, 54, 3 + tft.fontHeight(), TFT_BLACK);
     tft.setTextFont(1);
@@ -78,7 +78,7 @@ void loop(void)
     tft.print(F("Rotate:"));
     tft.print(r);
 
-    tft.setAddrWindow(n + 24, n - 20, n + 32, n - 12);
+    tft.setAddrWindow(n + 23, n - 20, n + 31, n - 12);
     for (int i = 6; i < 0x10; i++)
     {
       uint16_t cnt = 0;

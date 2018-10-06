@@ -26,6 +26,8 @@
 // #define ILI9488_DRIVER
 // #define RPI_ILI9486_DRIVER // 20MHz maximum SPI
 // #define S6D02A1_DRIVER
+// #define SEPS525_DRIVER
+// #define SSD1331_DRIVER
 // #define ST7735_DRIVER
 #define ST7789_DRIVER
 

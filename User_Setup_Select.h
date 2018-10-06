@@ -98,6 +98,9 @@
 #elif defined (SEPS525_DRIVER)
      #include "TFT_Drivers/SEPS525_Defines.h"
      #define  TFT_DRIVER 0x0525
+#elif defined (SSD1331_DRIVER)
+     #include "TFT_Drivers/SSD1331_Defines.h"
+     #define  TFT_DRIVER 0x1331
 #elif defined (XYZZY_DRIVER)  // <<<<<<<<<<<<<<<<<<<<<<<< ADD NEW DRIVER HERE
      #include "TFT_Drivers/XYZZY_Defines.h"
      #define  TFT_DRIVER 0x0000
