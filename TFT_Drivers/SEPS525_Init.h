@@ -35,10 +35,6 @@
     writecommand(0x14);
     writedata(0x31);
 
-    // memory write mode
-    writecommand(0x16);
-    writedata(0x66);
-
     // driving current r g b (uA)
     writecommand(0x10);
     writedata(0x45);
@@ -64,10 +60,6 @@
     writedata(0x57);
 
     writecommand(0x80);
-    writedata(0x00);
-
-    // mode set
-    writecommand(0x13);
     writedata(0x00);
 
     // display on

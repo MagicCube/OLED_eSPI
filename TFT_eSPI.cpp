@@ -2751,40 +2751,9 @@ inline void TFT_eSPI::setAddrWindow(int32_t x0, int32_t y0, int32_t x1, int32_t 
 
   DC_D;
 #elif defined (SEPS525_DRIVER)
-  int32_t h1, h2, v1, v2, apx, apy;
-
-  switch ( rotation ) {
-    case 0:
-      h1 = x0;
-      h2 = x1;
-      v1 = y0;
-      v2 = y1;
-      apx = h1;
-      apy = v1;
-      break;
-    case 1:
-      h1 = TFT_WIDTH - 1 - y1;
-      h2 = TFT_WIDTH - 1 - y0;
-      v1 = x0;
-      v2 = x1;
-      apx = h2;
-      apy = v1;
-      break;
-    case 2:
-      h1 = TFT_WIDTH - 1 - x1;
-      h2 = TFT_WIDTH - 1 - x0;
-      v1 = TFT_HEIGHT - 1 - y1;
-      v2 = TFT_HEIGHT - 1 - y0;
-      apx = h2;
-      apy = v2;
-      break;
-    case 3:
-      h1 = y0;
-      h2 = y1;
-      v1 = TFT_HEIGHT - 1 - x1;
-      v2 = TFT_HEIGHT - 1 - x0;
-      apx = h1;
-      apy = v2;
+  if (rotation & 0x01) { // Portrait
+    swap_coord(x0, y0);
+    swap_coord(x1, y1);
   }
 
   CS_L;
@@ -2793,30 +2762,30 @@ inline void TFT_eSPI::setAddrWindow(int32_t x0, int32_t y0, int32_t x1, int32_t 
   DC_C;
   tft_Write_8(MX1_ADDR);
   DC_D;
-  tft_Write_16(h1);
+  tft_Write_16(x0);
   DC_C;
   tft_Write_8(MX2_ADDR);
   DC_D;
-  tft_Write_16(h2);
+  tft_Write_16(x1);
 
   // Row addr set
   DC_C;
   tft_Write_8(MY1_ADDR);
   DC_D;
-  tft_Write_16(v1);
+  tft_Write_16(y0);
   DC_C;
   tft_Write_8(MY2_ADDR);
   DC_D;
-  tft_Write_16(v2);
+  tft_Write_16(y1);
 
   DC_C;
   tft_Write_8(M_AP_X);
   DC_D;
-  tft_Write_16(apx);
+  tft_Write_16(x0);
   DC_C;
   tft_Write_8(M_AP_Y);
   DC_D;
-  tft_Write_16(apy);
+  tft_Write_16(y0);
 
   // write to RAM
   DC_C;
