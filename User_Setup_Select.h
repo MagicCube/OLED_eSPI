@@ -32,12 +32,17 @@
 // #include <User_Setups/Setup_ILI9341_Parallel.h>  // Setup file for the ESP32 with parallel bus ILI9341
 // #include <User_Setups/Setup_ILI9341.h>           // Setup file for ILI9341
 // #include <User_Setups/Setup_ILI9481_Parallel.h>  // Setup file for the ESP32 with parallel bus ILI9481
+// #include <User_Setups/Setup_ILI9486.h>           // Setup file for ILI9486
 // #include <User_Setups/Setup_ILI9488_Parallel.h>  // Setup file for the ESP32 with parallel bus ILI9488
 // #include <User_Setups/Setup_ILI9488.h>           // Setup file for ILI9488
 // #include <User_Setups/Setup_M5Stack.h>           // Setup file for the ESP32 based M5Stack
+// #include <User_Setups/Setup_RPi_ILI9486.h>       // Setup file for RPi TFT
 // #include <User_Setups/Setup_RPi_touch_ILI9486.h> // Setup file for RPi TFT with touch
 // #include <User_Setups/Setup_RPi_Wr_ILI9486.h>    // Setup file for modified RPi TFT
 // #include <User_Setups/Setup_S6D02A1.h>           // Setup file for S6D02A1
+// #include <User_Setups/Setup_SEPS525.h>           // Setup file for SEPS525
+// #include <User_Setups/Setup_SSD1331.h>           // Setup file for SSD1331
+// #include <User_Setups/Setup_SSD1351.h>           // Setup file for SSD1351
 // #include <User_Setups/Setup_ST7735_128x128.h>    // Setup file for ST7735 128x128 display
 // #include <User_Setups/Setup_ST7735.h>            // Setup file for ST7735
 // #include <User_Setups/Setup_ST7789_240x240.h>    // Setup file for ST7789 240x240 display
@@ -101,6 +106,9 @@
 #elif defined (SSD1331_DRIVER)
      #include "TFT_Drivers/SSD1331_Defines.h"
      #define  TFT_DRIVER 0x1331
+#elif defined (SSD1351_DRIVER)
+     #include "TFT_Drivers/SSD1351_Defines.h"
+     #define  TFT_DRIVER 0x1351
 #elif defined (XYZZY_DRIVER)  // <<<<<<<<<<<<<<<<<<<<<<<< ADD NEW DRIVER HERE
      #include "TFT_Drivers/XYZZY_Defines.h"
      #define  TFT_DRIVER 0x0000

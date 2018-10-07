@@ -366,6 +366,9 @@ void TFT_eSPI::init(uint8_t tc)
 #elif defined (SSD1331_DRIVER)
     #include "TFT_Drivers/SSD1331_Init.h"
 
+#elif defined (SSD1351_DRIVER)
+    #include "TFT_Drivers/SSD1351_Init.h"
+
 #endif
 
   spi_end();
@@ -425,6 +428,9 @@ void TFT_eSPI::setRotation(uint8_t m)
 
 #elif defined (SSD1331_DRIVER)
     #include "TFT_Drivers/SSD1331_Rotation.h"
+
+#elif defined (SSD1351_DRIVER)
+    #include "TFT_Drivers/SSD1351_Rotation.h"
 
 #endif
 
@@ -2854,6 +2860,31 @@ inline void TFT_eSPI::setAddrWindow(int32_t x0, int32_t y0, int32_t x1, int32_t 
   tft_Write_8(y1);
 
   DC_D;
+#elif defined (SSD1351_DRIVER)
+  if (rotation & 0x01) { // Portrait
+    swap_coord(x0, y0);
+    swap_coord(x1, y1);
+  }
+
+  CS_L;
+  // Column addr set
+  DC_C;
+  tft_Write_8(SSD1351_CMD_SETCOLUMN);
+  DC_D;
+  tft_Write_8(x0);
+  tft_Write_8(x1);
+
+  // Row addr set
+  DC_C;
+  tft_Write_8(SSD1351_CMD_SETROW);
+  DC_D;
+  tft_Write_8(y0);
+  tft_Write_8(y1);
+
+  DC_C;
+  tft_Write_8(SSD1351_CMD_WRITERAM);
+  DC_D;
+
 #else
 #if !defined (RPI_ILI9486_DRIVER)
   uint32_t xaw = ((uint32_t)x0 << 16) | x1;
@@ -2977,7 +3008,7 @@ void TFT_eSPI::readAddrWindow(int32_t xs, int32_t ys, int32_t xe, int32_t ye)
 
 void TFT_eSPI::readAddrWindow(int32_t x0, int32_t y0, int32_t x1, int32_t y1)
 {
-#if defined (HX8352C_DRIVER) || defined (ILI9225_DRIVER) || defined (SEPS525_DRIVER) || defined (SSD1331_DRIVER)
+#if defined (HX8352C_DRIVER) || defined (ILI9225_DRIVER) || defined (SEPS525_DRIVER) || defined (SSD1331_DRIVER) || defined (SSD1351_DRIVER)
   setAddrWindow(x0, y0, x1, y1);
 #else
   //spi_begin();
@@ -3226,7 +3257,7 @@ void TFT_eSPI::drawPixel(uint32_t x, uint32_t y, uint32_t color)
   y+=rowstart;
 #endif
 
-#if defined (HX8352C_DRIVER) || defined (ILI9225_DRIVER) || defined (SEPS525_DRIVER) || defined (SSD1331_DRIVER)
+#if defined (HX8352C_DRIVER) || defined (ILI9225_DRIVER) || defined (SEPS525_DRIVER) || defined (SSD1331_DRIVER) || defined (SSD1351_DRIVER)
   setAddrWindow(x, y, x, y);
   tft_Write_16(color);
 

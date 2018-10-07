@@ -7,8 +7,6 @@
 {
     // Initialization Sequence
     writecommand(SSD1331_CMD_DISPLAYOFF);   	// 0xAE
-    writecommand(SSD1331_CMD_SETREMAP); 	    // 0xA0
-    writecommand(0b01110010); // BGR Color
     writecommand(SSD1331_CMD_STARTLINE); 	    // 0xA1
     writecommand(0x0);
     writecommand(SSD1331_CMD_DISPLAYOFFSET); 	// 0xA2
