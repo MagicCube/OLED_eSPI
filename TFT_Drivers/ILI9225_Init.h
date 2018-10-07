@@ -44,8 +44,6 @@
 	delay(50);
 	spi_begin();
 
-	writecommand(ILI9225_DRIVER_OUTPUT_CTRL);
-	writedata(0x01);writedata(0x1C); // set the display line number and display direction
 	writecommand(ILI9225_LCD_AC_DRIVING_CTRL);
 	writedata(0x01);writedata(0x00); // set 1 line inversion
 	writecommand(ILI9225_DISP_CTRL1);

@@ -2793,32 +2793,9 @@ inline void TFT_eSPI::setAddrWindow(int32_t x0, int32_t y0, int32_t x1, int32_t 
 
   DC_D;
 #elif defined (ILI9225_DRIVER)
-  int32_t h1, h2, v1, v2;
-
-  switch ( rotation ) {
-    case 0:
-      h1 = x1;
-      h2 = x0;
-      v1 = y1;
-      v2 = y0;
-      break;
-    case 1:
-      h1 = y1;
-      h2 = y0;
-      v1 = TFT_HEIGHT - 1 - x0;
-      v2 = TFT_HEIGHT - 1 - x1;
-      break;
-    case 2:
-      h1 = TFT_WIDTH - 1 - x0;
-      h2 = TFT_WIDTH - 1 - x1;
-      v1 = TFT_HEIGHT - 1 - y0;
-      v2 = TFT_HEIGHT - 1 - y1;
-      break;
-    case 3:
-      h1 = TFT_WIDTH - 1 - y0;
-      h2 = TFT_WIDTH - 1 - y1;
-      v1 = x1;
-      v2 = x0;
+  if (rotation & 0x01) { // Portrait
+    swap_coord(x0, y0);
+    swap_coord(x1, y1);
   }
 
   CS_L;
@@ -2827,30 +2804,30 @@ inline void TFT_eSPI::setAddrWindow(int32_t x0, int32_t y0, int32_t x1, int32_t 
   DC_C;
   tft_Write_8(ILI9225_HORIZONTAL_WINDOW_ADDR1);
   DC_D;
-  tft_Write_16(h1);
+  tft_Write_16(x1);
   DC_C;
   tft_Write_8(ILI9225_HORIZONTAL_WINDOW_ADDR2);
   DC_D;
-  tft_Write_16(h2);
+  tft_Write_16(x0);
 
   // Row addr set
   DC_C;
   tft_Write_8(ILI9225_VERTICAL_WINDOW_ADDR1);
   DC_D;
-  tft_Write_16(v1);
+  tft_Write_16(y1);
   DC_C;
   tft_Write_8(ILI9225_VERTICAL_WINDOW_ADDR2);
   DC_D;
-  tft_Write_16(v2);
+  tft_Write_16(y0);
 
   DC_C;
   tft_Write_8(ILI9225_RAM_ADDR_SET1);
   DC_D;
-  tft_Write_16(h1);
+  tft_Write_16(x0);
   DC_C;
   tft_Write_8(ILI9225_RAM_ADDR_SET2);
   DC_D;
-  tft_Write_16(v1);
+  tft_Write_16(y0);
 
   // write to RAM
   DC_C;
