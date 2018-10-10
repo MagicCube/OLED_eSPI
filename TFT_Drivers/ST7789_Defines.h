@@ -7,6 +7,8 @@
   #define TFT_HEIGHT 320
 #endif
 
+#define TFT_SPI_MODE SPI_MODE3
+
 #if (TFT_HEIGHT != 320) || (TFT_WIDTH != 240)
   #define CGRAM_OFFSET
 #endif

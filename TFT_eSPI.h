@@ -35,9 +35,7 @@
   #define SPI_READ_FREQUENCY SPI_FREQUENCY
 #endif
 
-#ifdef ST7789_DRIVER
-  #define TFT_SPI_MODE SPI_MODE3
-#else
+#ifndef TFT_SPI_MODE
   #define TFT_SPI_MODE SPI_MODE0
 #endif
 
@@ -280,6 +278,8 @@
   #define tft_Write_32(C) SPI.write32(C)
 
 #endif
+
+#define tft_Write_C8(C) DC_C; tft_Write_8(C); DC_D
 
 #ifdef LOAD_GFXFF
   // We can include all the free fonts and they will only be built into

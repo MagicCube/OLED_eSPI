@@ -102,7 +102,7 @@
 #define TFT_CS   5  // Chip select control pin D8
 #define TFT_DC   16  // Data Command control pin
 #define TFT_RST  17  // Reset pin (could connect to NodeMCU RST, see next line)
-//#define TFT_RST  -1  // Set TFT_RST to -1 if the display RESET is connected to NodeMCU RST or 3.3V
+// #define TFT_RST  -1  // Set TFT_RST to -1 if the display RESET is connected to NodeMCU RST or 3.3V
 
 //#define TOUCH_CS PIN_D2     // Chip select pin (T_CS) of touch screen
 
