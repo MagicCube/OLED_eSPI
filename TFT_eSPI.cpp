@@ -58,26 +58,6 @@ inline void TFT_eSPI::spi_end(void){
 #endif
 }
 
-inline void TFT_eSPI::spi_begin_read(void){
-#if defined (SPI_HAS_TRANSACTION) && defined (SUPPORT_TRANSACTIONS) && !defined(ESP32_PARALLEL)
-  if (locked) {locked = false; SPI.beginTransaction(SPISettings(SPI_READ_FREQUENCY, MSBFIRST, TFT_SPI_MODE));}
-#else
-  #if !defined(ESP32_PARALLEL)
-    SPI.setFrequency(SPI_READ_FREQUENCY);
-  #endif
-#endif
-}
-
-inline void TFT_eSPI::spi_end_read(void){
-#if defined (SPI_HAS_TRANSACTION) && defined (SUPPORT_TRANSACTIONS) && !defined(ESP32_PARALLEL)
-  if(!inTransaction) {if (!locked) {locked = true; SPI.endTransaction();}}
-#else
-  #if !defined(ESP32_PARALLEL)
-    SPI.setFrequency(SPI_FREQUENCY);
-  #endif
-#endif
-}
-
 #if defined (TOUCH_CS) && defined (SPI_TOUCH_FREQUENCY) // && !defined(ESP32_PARALLEL)
 
   inline void TFT_eSPI::spi_begin_touch(void){
@@ -108,7 +88,7 @@ TFT_eSPI::TFT_eSPI(int16_t w, int16_t h)
 // The control pins are deliberately set to the inactive state (CS high) as setup()
 // might call and initialise other SPI peripherals which would could cause conflicts
 // if CS is floating or undefined.
-#ifdef TFT_CS
+#if (TFT_CS >= 0)
   digitalWrite(TFT_CS, HIGH); // Chip select high (inactive)
   pinMode(TFT_CS, OUTPUT);
 #endif
@@ -129,11 +109,9 @@ TFT_eSPI::TFT_eSPI(int16_t w, int16_t h)
   pinMode(TFT_DC, OUTPUT);
 #endif
 
-#ifdef TFT_RST
-  if (TFT_RST >= 0) {
-    digitalWrite(TFT_RST, HIGH); // Set high, do not share pin with another SPI device
-    pinMode(TFT_RST, OUTPUT);
-  }
+#if (TFT_RST >= 0)
+  digitalWrite(TFT_RST, HIGH); // Set high, do not share pin with another SPI device
+  pinMode(TFT_RST, OUTPUT);
 #endif
 
 #ifdef ESP32_PARALLEL
@@ -241,7 +219,7 @@ void TFT_eSPI::init(uint8_t tc)
   if (_booted)
   {
 #if !defined (ESP32)
-  #ifdef TFT_CS
+  #if (TFT_CS >= 0)
     cspinmask = (uint32_t) digitalPinToBitMask(TFT_CS);
   #endif
 
@@ -286,7 +264,7 @@ void TFT_eSPI::init(uint8_t tc)
     digitalWrite(TFT_CS, LOW); // Chip select low permanently
     pinMode(TFT_CS, OUTPUT);
 #else
-  #ifdef TFT_CS
+  #if (TFT_CS >= 0)
     // Set to output once again in case D6 (MISO) is used for CS
     digitalWrite(TFT_CS, HIGH); // Chip select high (inactive)
     pinMode(TFT_CS, OUTPUT);
@@ -294,7 +272,7 @@ void TFT_eSPI::init(uint8_t tc)
     SPI.setHwCs(1); // Use hardware SS toggling
   #endif
 #endif
-  
+
   // Set to output once again in case D6 (MISO) is used for DC
 #ifdef TFT_DC
     digitalWrite(TFT_DC, HIGH); // Data/Command high = data mode
@@ -377,11 +355,6 @@ void TFT_eSPI::init(uint8_t tc)
   // Turn on the back-light LED
   digitalWrite(TFT_BL, HIGH);
   pinMode(TFT_BL, OUTPUT);
-#endif
-
-#ifdef CGRAM_OFFSET
-  colstart = 0;
-  rowstart = 0;
 #endif
 
   setRotation(rotation);
@@ -529,190 +502,6 @@ void TFT_eSPI::writedata(uint8_t d)
 
 
 /***************************************************************************************
-** Function name:           readcommand8
-** Description:             Read a 8 bit data value from an indexed command register
-***************************************************************************************/
-uint8_t TFT_eSPI::readcommand8(uint8_t cmd_function, uint8_t index)
-{
-  uint8_t reg = 0;
-#ifdef ESP32_PARALLEL
-
-  writecommand(cmd_function); // Sets DC and CS high 
-
-  busDir(dir_mask, INPUT);
-
-  CS_L;
-
-  // Read nth parameter (assumes caller discards 1st parameter or points index to 2nd)
-  while(index--) reg = readByte();
-
-  busDir(dir_mask, OUTPUT);
-
-  CS_H;
-
-#else
-  // for ILI9341 Interface II i.e. IM [3:0] = "1101"
-  spi_begin_read();
-  index = 0x10 + (index & 0x0F);
-
-  CS_L;
-  tft_Write_C8(0xD9);
-  tft_Write_8(index);
-  CS_H;
-
-  CS_L;
-  tft_Write_C8(cmd_function);
-  reg = tft_Write_8(0);
-  CS_H;
-
-  spi_end_read();
-#endif
-  return reg;
-}
-
-
-/***************************************************************************************
-** Function name:           readcommand16
-** Description:             Read a 16 bit data value from an indexed command register
-***************************************************************************************/
-uint16_t TFT_eSPI::readcommand16(uint8_t cmd_function, uint8_t index)
-{
-  uint32_t reg;
-
-  reg  = (readcommand8(cmd_function, index + 0) <<  8);
-  reg |= (readcommand8(cmd_function, index + 1) <<  0);
-
-  return reg;
-}
-
-
-/***************************************************************************************
-** Function name:           readcommand32
-** Description:             Read a 32 bit data value from an indexed command register
-***************************************************************************************/
-uint32_t TFT_eSPI::readcommand32(uint8_t cmd_function, uint8_t index)
-{
-  uint32_t reg;
-
-  reg  = (readcommand8(cmd_function, index + 0) << 24);
-  reg |= (readcommand8(cmd_function, index + 1) << 16);
-  reg |= (readcommand8(cmd_function, index + 2) <<  8);
-  reg |= (readcommand8(cmd_function, index + 3) <<  0);
-
-  return reg;
-}
-
-
-/***************************************************************************************
-** Function name:           read pixel (for SPI Interface II i.e. IM [3:0] = "1101")
-** Description:             Read 565 pixel colours from a pixel
-***************************************************************************************/
-uint16_t TFT_eSPI::readPixel(int32_t x0, int32_t y0)
-{
-#if defined(ESP32_PARALLEL)
-
-  readAddrWindow(x0, y0, x0, y0); // Sets CS low
-
-  // Set masked pins D0- D7 to input
-  busDir(dir_mask, INPUT); 
-
-  // Dummy read to throw away don't care value
-  readByte();
-
-  // Fetch the 16 bit BRG pixel
-  //uint16_t rgb = (readByte() << 8) | readByte();
-
-  #if defined (ILI9341_DRIVER) || defined (ILI9486_DRIVER) || defined (ILI9488_DRIVER) // Read 3 bytes
-
-  // Read window pixel 24 bit RGB values and fill in LS bits
-  uint16_t rgb = ((readByte() & 0xF8) << 8) | ((readByte() & 0xFC) << 3) | (readByte() >> 3);
-
-  CS_H;
-
-  // Set masked pins D0- D7 to output
-  busDir(dir_mask, OUTPUT);
-
-  return rgb;
-
-  #else // ILI9481 16 bit read
-
-  // Fetch the 16 bit BRG pixel
-  uint16_t bgr = (readByte() << 8) | readByte();
-
-  CS_H;
-
-  // Set masked pins D0- D7 to output
-  busDir(dir_mask, OUTPUT);
-
-  // Swap Red and Blue (could check MADCTL setting to see if this is needed)
-  return  (bgr>>11) | (bgr<<11) | (bgr & 0x7E0);
-  #endif
-
-#else // Not ESP32_PARALLEL
-
-  spi_begin_read();
-
-  readAddrWindow(x0, y0, x0, y0); // Sets CS low
-
-  // Dummy read to throw away don't care value
-  tft_Write_8(0);
-
-    // Read the 3 RGB bytes, colour is actually only in the top 6 bits of each byte
-    // as the TFT stores colours as 18 bits
-  #if !defined (ILI9486_DRIVER) && !defined (ILI9488_DRIVER)
-    uint8_t r = tft_Write_8(0);
-    uint8_t g = tft_Write_8(0);
-    uint8_t b = tft_Write_8(0);
-  #else
-    // The 6 colour bits are in MS 6 bits of each byte, but the ILI9488 needs an extra clock pulse
-    // so bits appear shifted right 1 bit, so mask the middle 6 bits then shift 1 place left
-    uint8_t r = (tft_Write_8(0)&0x7E)<<1;
-    uint8_t g = (tft_Write_8(0)&0x7E)<<1;
-    uint8_t b = (tft_Write_8(0)&0x7E)<<1;
-  #endif
-
-  CS_H;
-
-  spi_end_read();
-    
-  return color565(r, g, b);
-
-#endif
-}
-
-
-/***************************************************************************************
-** Function name:           read byte  - supports class functions
-** Description:             Read a byte from ESP32 8 bit data port
-***************************************************************************************/
-// Bus MUST be set to input before calling this function!
-uint8_t readByte(void)
-{
-  uint8_t b = 0;
-
-#ifdef ESP32_PARALLEL
-  RD_L;
-  uint32_t reg;           // Read all GPIO pins 0-31
-  reg = gpio_input_get(); // Read three times to allow for bus access time
-  reg = gpio_input_get();
-  reg = gpio_input_get(); // Data should be stable now
-  RD_H;
-
-  // Check GPIO bits used and build value
-  b  = (((reg>>TFT_D0)&1) << 0);
-  b |= (((reg>>TFT_D1)&1) << 1);
-  b |= (((reg>>TFT_D2)&1) << 2);
-  b |= (((reg>>TFT_D3)&1) << 3);
-  b |= (((reg>>TFT_D4)&1) << 4);
-  b |= (((reg>>TFT_D5)&1) << 5);
-  b |= (((reg>>TFT_D6)&1) << 6);
-  b |= (((reg>>TFT_D7)&1) << 7);
-#endif
-
-  return b;
-}
-
-/***************************************************************************************
 ** Function name:           masked GPIO direction control  - supports class functions
 ** Description:             Set masked ESP32 GPIO pins to input or output
 ***************************************************************************************/
@@ -733,91 +522,6 @@ void busDir(uint32_t mask, uint8_t mode)
 
   gpio_config(&gpio);
 
-#endif
-}
-
-/***************************************************************************************
-** Function name:           read rectangle (for SPI Interface II i.e. IM [3:0] = "1101")
-** Description:             Read 565 pixel colours from a defined area
-***************************************************************************************/
-void TFT_eSPI::readRect(uint32_t x, uint32_t y, uint32_t w, uint32_t h, uint16_t *data)
-{
-  if ((x > _width) || (y > _height) || (w == 0) || (h == 0)) return;
-
-#if defined(ESP32_PARALLEL)
-
-  readAddrWindow(x, y, x + w - 1, y + h - 1); // Sets CS low
-
-  // Set masked pins D0- D7 to input
-  busDir(dir_mask, INPUT);
-
-  // Dummy read to throw away don't care value
-  readByte();
-
-  // Total pixel count
-  uint32_t len = w * h;
-
-#if defined (ILI9341_DRIVER) || defined (ILI9486_DRIVER) || defined (ILI9488_DRIVER) // Read 3 bytes
-  // Fetch the 24 bit RGB value
-  while (len--) {
-    // Assemble the RGB 16 bit colour
-    uint16_t rgb = ((readByte() & 0xF8) << 8) | ((readByte() & 0xFC) << 3) | (readByte() >> 3);
-
-    // Swapped byte order for compatibility with pushRect()
-    *data++ = (rgb<<8) | (rgb>>8);
-  }
-#else // ILI9481 reads as 16 bits
-  // Fetch the 16 bit BRG pixels
-  while (len--) {
-    // Read the BRG 16 bit colour
-    uint16_t bgr = (readByte() << 8) | readByte();
-
-    // Swap Red and Blue (could check MADCTL setting to see if this is needed)
-    uint16_t rgb = (bgr>>11) | (bgr<<11) | (bgr & 0x7E0);
-
-    // Swapped byte order for compatibility with pushRect()
-    *data++ = (rgb<<8) | (rgb>>8);
-  }
-#endif
-  CS_H;
-
-  // Set masked pins D0- D7 to output
-  busDir(dir_mask, OUTPUT);
-
-#else // Not ESP32_PARALLEL
-
-  spi_begin_read();
-
-  readAddrWindow(x, y, x + w - 1, y + h - 1); // Sets CS low
-
-  // Dummy read to throw away don't care value
-  tft_Write_8(0);
-
-  // Read window pixel 24 bit RGB values
-  uint32_t len = w * h;
-  while (len--) {
-
-    // Read the 3 RGB bytes, colour is actually only in the top 6 bits of each byte
-    // as the TFT stores colours as 18 bits
-  #if !defined (ILI9486_DRIVER) && !defined (ILI9488_DRIVER)
-    uint8_t r = tft_Write_8(0);
-    uint8_t g = tft_Write_8(0);
-    uint8_t b = tft_Write_8(0);
-  #else
-    // The 6 colour bits are in LS 6 bits of each byte but we do not include the extra clock pulse
-    // so we use a trick and mask the middle 6 bits of the byte, then only shift 1 place left
-    uint8_t r = (tft_Write_8(0)&0x7E)<<1;
-    uint8_t g = (tft_Write_8(0)&0x7E)<<1;
-    uint8_t b = (tft_Write_8(0)&0x7E)<<1;
-  #endif
-
-    // Swapped colour byte order for compatibility with pushRect()
-    *data++ = (r & 0xF8) | (g & 0xE0) >> 5 | (b & 0xF8) << 5 | (g & 0x1C) << 11;
-  }
-
-  CS_H;
-
-  spi_end_read();
 #endif
 }
 
@@ -1360,48 +1064,6 @@ void TFT_eSPI::setSwapBytes(bool swap)
 bool TFT_eSPI::getSwapBytes(void)
 {
   return _swapBytes;
-}
-
-/***************************************************************************************
-** Function name:           read rectangle (for SPI Interface II i.e. IM [3:0] = "1101")
-** Description:             Read RGB pixel colours from a defined area
-***************************************************************************************/
-// If w and h are 1, then 1 pixel is read, *data array size must be 3 bytes per pixel
-void  TFT_eSPI::readRectRGB(int32_t x0, int32_t y0, int32_t w, int32_t h, uint8_t *data)
-{
-#if !defined(ESP32_PARALLEL)
-  spi_begin_read();
-
-  readAddrWindow(x0, y0, x0 + w - 1, y0 + h - 1); // Sets CS low
-
-  // Dummy read to throw away don't care value
-  tft_Write_8(0);
-  
-  // Read window pixel 24 bit RGB values, buffer must be set in sketch to 3 * w * h
-  uint32_t len = w * h;
-  while (len--) {
-    // Read the 3 RGB bytes, colour is actually only in the top 6 bits of each byte
-    // as the TFT stores colours as 18 bits
-
-    // Read the 3 RGB bytes, colour is actually only in the top 6 bits of each byte
-    // as the TFT stores colours as 18 bits
-  #if !defined (ILI9486_DRIVER) && !defined (ILI9488_DRIVER)
-    *data++ = tft_Write_8(0);
-    *data++ = tft_Write_8(0);
-    *data++ = tft_Write_8(0);
-  #else
-    // The 6 colour bits are in MS 6 bits of each byte, but the ILI9488 needs an extra clock pulse
-    // so bits appear shifted right 1 bit, so mask the middle 6 bits then shift 1 place left
-    *data++ = (tft_Write_8(0)&0x7E)<<1;
-    *data++ = (tft_Write_8(0)&0x7E)<<1;
-    *data++ = (tft_Write_8(0)&0x7E)<<1;
-  #endif
-
-  }
-  CS_H;
-
-  spi_end_read();
-#endif
 }
 
 
@@ -2810,13 +2472,11 @@ inline void TFT_eSPI::setAddrWindow(int32_t x0, int32_t y0, int32_t x1, int32_t 
 
   DC_C;
   tft_Write_8(SSD1331_CMD_SETCOLUMN);
-  tft_Write_8(x0);
-  tft_Write_8(x1);
+  tft_Write_16(((uint16_t)x0 << 8) | x1);
 
   // Row addr set
   tft_Write_8(SSD1331_CMD_SETROW);
-  tft_Write_8(y0);
-  tft_Write_8(y1);
+  tft_Write_16(((uint16_t)y0 << 8) | y1);
 
   DC_D;
 #elif defined (SSD1351_DRIVER)
@@ -2828,22 +2488,15 @@ inline void TFT_eSPI::setAddrWindow(int32_t x0, int32_t y0, int32_t x1, int32_t 
   CS_L;
   // Column addr set
   tft_Write_C8(SSD1351_CMD_SETCOLUMN);
-  tft_Write_8(x0);
-  tft_Write_8(x1);
+  tft_Write_16(((uint16_t)x0 << 8) | x1);
 
   // Row addr set
   tft_Write_C8(SSD1351_CMD_SETROW);
-  tft_Write_8(y0);
-  tft_Write_8(y1);
+  tft_Write_16(((uint16_t)y0 << 8) | y1);
 
   tft_Write_C8(SSD1351_CMD_WRITERAM);
 
 #else
-#if !defined (RPI_ILI9486_DRIVER)
-  uint32_t xaw = ((uint32_t)x0 << 16) | x1;
-  uint32_t yaw = ((uint32_t)y0 << 16) | y1;
-#endif
-
   // Column addr set
   CS_L;
 
@@ -2853,7 +2506,7 @@ inline void TFT_eSPI::setAddrWindow(int32_t x0, int32_t y0, int32_t x1, int32_t 
   uint8_t xBin[] = { 0, (uint8_t) (x0>>8), 0, (uint8_t) (x0>>0), 0, (uint8_t) (x1>>8), 0, (uint8_t) (x1>>0), };
   SPI.writePattern(&xBin[0], 8, 1);
 #else
-  tft_Write_32(xaw);
+  tft_Write_32(((uint32_t)x0 << 16) | x1);
 #endif
 
   // Row addr set
@@ -2863,7 +2516,7 @@ inline void TFT_eSPI::setAddrWindow(int32_t x0, int32_t y0, int32_t x1, int32_t 
   uint8_t yBin[] = { 0, (uint8_t) (y0>>8), 0, (uint8_t) (y0>>0), 0, (uint8_t) (y1>>8), 0, (uint8_t) (y1>>0), };
   SPI.writePattern(&yBin[0], 8, 1);
 #else
-  tft_Write_32(yaw);
+  tft_Write_32(((uint32_t)y0 << 16) | y1);
 #endif
 
   // write to RAM
@@ -2876,116 +2529,6 @@ inline void TFT_eSPI::setAddrWindow(int32_t x0, int32_t y0, int32_t x1, int32_t 
 #endif // end RPI_ILI9486_DRIVER check
 #endif // end ESP32 check
 
-
-/***************************************************************************************
-** Function name:           readAddrWindow
-** Description:             define an area to read a stream of pixels
-***************************************************************************************/
-// Chip select stays low
-#if defined (ESP8266) && !defined (RPI_WRITE_STROBE)
-void TFT_eSPI::readAddrWindow(int32_t xs, int32_t ys, int32_t xe, int32_t ye)
-{
-  //spi_begin();
-
-  addr_col = 0xFFFF;
-  addr_row = 0xFFFF;
-  
-#ifdef CGRAM_OFFSET
-  xs+=colstart;
-  xe+=colstart;
-  ys+=rowstart;
-  ye+=rowstart;
-#endif
-
-  // Column addr set
-  DC_C;
-  CS_L;
-
-  uint32_t mask = ~((SPIMMOSI << SPILMOSI) | (SPIMMISO << SPILMISO));
-  mask = SPI1U1 & mask;
-
-  SPI1U1 = mask | (CMD_BITS << SPILMOSI) | (CMD_BITS << SPILMISO);
-
-  SPI1W0 = TFT_CASET;
-  SPI1CMD |= SPIBUSY;
-  while(SPI1CMD & SPIBUSY) {}
-
-  DC_D;
-
-  SPI1U1 = mask | (31 << SPILMOSI) | (31 << SPILMISO);
-  // Load the two coords as a 32 bit value and shift in one go
-  SPI1W0 = (xs >> 8) | (uint16_t)(xs << 8) | ((uint8_t)(xe >> 8)<<16 | (xe << 24));
-  SPI1CMD |= SPIBUSY;
-  while(SPI1CMD & SPIBUSY) {}
-
-  // Row addr set
-  DC_C;
-
-  SPI1U1 = mask | (CMD_BITS << SPILMOSI) | (CMD_BITS << SPILMISO);
-
-  SPI1W0 = TFT_PASET;
-  SPI1CMD |= SPIBUSY;
-  while(SPI1CMD & SPIBUSY) {}
-
-  DC_D;
-
-  SPI1U1 = mask | (31 << SPILMOSI) | (31 << SPILMISO);
-  // Load the two coords as a 32 bit value and shift in one go
-  SPI1W0 = (ys >> 8) | (uint16_t)(ys << 8) | ((uint8_t)(ye >> 8)<<16 | (ye << 24));
-  SPI1CMD |= SPIBUSY;
-  while(SPI1CMD & SPIBUSY) {}
-
-  // read from RAM
-  DC_C;
-
-  SPI1U1 = mask | (CMD_BITS << SPILMOSI) | (CMD_BITS << SPILMISO);
-  SPI1W0 = TFT_RAMRD;
-  SPI1CMD |= SPIBUSY;
-  while(SPI1CMD & SPIBUSY) {}
-
-  DC_D;
-  //spi_end();
-}
-
-#else //ESP32
-
-void TFT_eSPI::readAddrWindow(int32_t x0, int32_t y0, int32_t x1, int32_t y1)
-{
-#if defined (HX8352C_DRIVER) || defined (ILI9225_DRIVER) || defined (SEPS525_DRIVER) || defined (SSD1331_DRIVER) || defined (SSD1351_DRIVER)
-  setAddrWindow(x0, y0, x1, y1);
-#else
-  //spi_begin();
-
-  addr_col = 0xFFFF;
-  addr_row = 0xFFFF;
-
-#ifdef CGRAM_OFFSET
-  x0+=colstart;
-  x1+=colstart;
-  y0+=rowstart;
-  y1+=rowstart;
-#endif
-
-  uint32_t xaw = ((uint32_t)x0 << 16) | x1;
-  uint32_t yaw = ((uint32_t)y0 << 16) | y1;
-  
-  // Column addr set
-  CS_L;
-
-  tft_Write_C8(TFT_CASET);
-  tft_Write_32(xaw);
-
-  // Row addr set
-  tft_Write_C8(TFT_PASET);
-  tft_Write_32(yaw);
-  
-  tft_Write_C8(TFT_RAMRD); // Read CGRAM command
-
-  //spi_end();
-#endif
-}
-
-#endif
 
 /***************************************************************************************
 ** Function name:           drawPixel
@@ -3194,10 +2737,6 @@ void TFT_eSPI::drawPixel(uint32_t x, uint32_t y, uint32_t color)
 
   CS_H;
 #else
-#if !defined (RPI_ILI9486_DRIVER)
-  uint32_t xaw = ((uint32_t)x << 16) | x;
-  uint32_t yaw = ((uint32_t)y << 16) | y;
-#endif
 
   CS_L;
 
@@ -3210,7 +2749,7 @@ void TFT_eSPI::drawPixel(uint32_t x, uint32_t y, uint32_t color)
     uint8_t xBin[] = { 0, (uint8_t) (x>>8), 0, (uint8_t) (x>>0), 0, (uint8_t) (x>>8), 0, (uint8_t) (x>>0), };
     SPI.writePattern(&xBin[0], 8, 1);
 #else
-    tft_Write_32(xaw);
+    tft_Write_32(((uint32_t)x << 16) | x);
 #endif
     
     addr_col = x;
@@ -3225,7 +2764,7 @@ void TFT_eSPI::drawPixel(uint32_t x, uint32_t y, uint32_t color)
     uint8_t yBin[] = { 0, (uint8_t) (y>>8), 0, (uint8_t) (y>>0), 0, (uint8_t) (y>>8), 0, (uint8_t) (y>>0), };
     SPI.writePattern(&yBin[0], 8, 1);
 #else
-    tft_Write_32(yaw);
+    tft_Write_32(((uint32_t)y << 16) | y);
 #endif
 
     addr_row = y;
@@ -5035,7 +4574,7 @@ void TFT_eSPI::getSetup(setup_t &tft_settings)
   tft_settings.pin_tft_clk  = -1;
 #endif
 
-#if defined (TFT_CS)
+#if (TFT_CS >= 0)
   tft_settings.pin_tft_cs   = TFT_CS;
 #else
   tft_settings.pin_tft_cs   = -1;
@@ -5107,4 +4646,3 @@ void TFT_eSPI::getSetup(setup_t &tft_settings)
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////////////
-

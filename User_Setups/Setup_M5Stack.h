@@ -3,10 +3,6 @@
 // For M5Stack ESP32 module with integrated display ONLY, remove // in line below
 #define M5STACK
 
-// For the M5Stack module use these #define lines
-#define TFT_MISO 19
-#define TFT_MOSI 23
-#define TFT_SCLK 18
 #define TFT_CS   14  // Chip select control pin
 #define TFT_DC   27  // Data Command control pin
 #define TFT_RST  33  // Reset pin (could connect to Arduino RESET pin)

@@ -273,7 +273,7 @@
 
 #else
 
-  #define tft_Write_8(C)  SPI.transfer(C)
+  #define tft_Write_8(C)  SPI.write(C)
   #define tft_Write_16(C) SPI.write16(C)
   #define tft_Write_32(C) SPI.write32(C)
 
@@ -596,16 +596,6 @@ class TFT_eSPI : public Print {
 
            commandList(const uint8_t *addr);
 
-  uint8_t  readcommand8(uint8_t cmd_function, uint8_t index);
-  uint16_t readcommand16(uint8_t cmd_function, uint8_t index);
-  uint32_t readcommand32(uint8_t cmd_function, uint8_t index);
-
-           // Read the colour of a pixel at x,y and return value in 565 format 
-  uint16_t readPixel(int32_t x0, int32_t y0);
-
-           // The next functions can be used as a pair to copy screen blocks (or horizontal/vertical lines) to another location
-           // Read a block of pixels to a data buffer, buffer is 16 bit and the array size must be at least w * h
-  void     readRect(uint32_t x0, uint32_t y0, uint32_t w, uint32_t h, uint16_t *data);
            // Write a block of pixels to the screen
   void     pushRect(uint32_t x0, uint32_t y0, uint32_t w, uint32_t h, uint16_t *data);
 
@@ -688,11 +678,6 @@ class TFT_eSPI : public Print {
 
   inline void spi_begin() __attribute__((always_inline));
   inline void spi_end()   __attribute__((always_inline));
-
-  inline void spi_begin_read() __attribute__((always_inline));
-  inline void spi_end_read()   __attribute__((always_inline));
-
-  void     readAddrWindow(int32_t xs, int32_t ys, int32_t xe, int32_t ye);
 
   uint8_t  tabcolor,
            colstart = 0, rowstart = 0; // some ST7735 displays need this changed

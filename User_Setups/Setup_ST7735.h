@@ -15,10 +15,6 @@
 #define ST7735_REDTAB
 //#define ST7735_BLACKTAB
 
-#define TFT_CS   PIN_D8  // Chip select control pin D8
-#define TFT_DC   PIN_D3  // Data Command control pin
-#define TFT_RST  PIN_D4  // Reset pin (could connect to NodeMCU RST, see next line)
-
 // Define the SPI clock frequency, this affects the graphics rendering speed. Too
 // fast and the TFT driver will not keep up and display corruption appears.
 #define SPI_FREQUENCY  27000000 // Actually sets it to 26.67MHz = 80/3

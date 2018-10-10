@@ -99,14 +99,15 @@
 // ###### EDIT THE PIN NUMBERS IN THE LINES FOLLOWING TO SUIT YOUR ESP8266 SETUP ######
 
 // For NodeMCU - use pin numbers in the form PIN_Dx where Dx is the NodeMCU pin designation
-#define TFT_CS   5  // Chip select control pin D8
-#define TFT_DC   16  // Data Command control pin
-#define TFT_RST  17  // Reset pin (could connect to NodeMCU RST, see next line)
-// #define TFT_RST  -1  // Set TFT_RST to -1 if the display RESET is connected to NodeMCU RST or 3.3V
+// #define TFT_CS   PIN_D8  // Chip select control pin D8
+// #define TFT_CS   -1      // Set TFT_CS to -1 if the display CS is connected to GND
+// #define TFT_DC   PIN_D3  // Data Command control pin
+// #define TFT_RST  PIN_D4  // Reset pin (could connect to NodeMCU RST, see next line)
+// #define TFT_RST  -1      // Set TFT_RST to -1 if the display RESET is connected to NodeMCU RST or 3.3V
 
-//#define TOUCH_CS PIN_D2     // Chip select pin (T_CS) of touch screen
+//#define TOUCH_CS PIN_D2   // Chip select pin (T_CS) of touch screen
 
-//#define TFT_WR PIN_D2       // Write strobe for modified Raspberry Pi TFT only
+//#define TFT_WR PIN_D2     // Write strobe for modified Raspberry Pi TFT only
 
 
 // ######  FOR ESP8266 OVERLAP MODE EDIT THE PIN NUMBERS IN THE FOLLOWING LINES  ######
@@ -116,10 +117,11 @@
 // Use NodeMCU SD0=MISO, SD1=MOSI, CLK=SCLK to connect to TFT in overlap mode
 
 // In ESP8266 overlap mode the TFT chip select MUST connect to pin D3
-//#define TFT_CS   PIN_D3
-//#define TFT_DC   PIN_D5  // Data Command control pin
-//#define TFT_RST  PIN_D4  // Reset pin (could connect to NodeMCU RST, see next line)
-//#define TFT_RST  -1  // Set TFT_RST to -1 if the display RESET is connected to NodeMCU RST or 3.3V
+// #define TFT_CS   PIN_D3
+// #define TFT_CS   -1      // Set TFT_CS to -1 if the display CS is connected to GND
+// #define TFT_DC   PIN_D5  // Data Command control pin
+// #define TFT_RST  PIN_D4  // Reset pin (could connect to NodeMCU RST, see next line)
+// #define TFT_RST  -1      // Set TFT_RST to -1 if the display RESET is connected to NodeMCU RST or 3.3V
 
 // In ESP8266 overlap mode the following must be defined
 //#define TFT_SPI_OVERLAP
@@ -129,26 +131,27 @@
 // For ESP32 Dev board (only tested with ILI9341 display)
 // The hardware SPI can be mapped to any pins
 
-//#define TFT_MISO 19
-//#define TFT_MOSI 23
-//#define TFT_SCLK 18
-//#define TFT_CS    15  // Chip select control pin
-//#define TFT_DC    2  // Data Command control pin
-//#define TFT_RST   4  // Reset pin (could connect to RST pin)
-//#define TFT_RST  -1  // Set TFT_RST to -1 if display RESET is connected to ESP32 board RST
+// #define TFT_MISO 19
+// #define TFT_MOSI 23
+// #define TFT_SCLK 18
+// #define TFT_CS   15      // Chip select control pin
+// #define TFT_CS   -1      // Set TFT_CS to -1 if the display CS is connected to GND
+// #define TFT_DC    2      // Data Command control pin
+// #define TFT_RST   4      // Reset pin (could connect to RST pin)
+// #define TFT_RST  -1      // Set TFT_RST to -1 if display RESET is connected to ESP32 board RST
 
 // For the M5Stack module use these #define lines
-//#define TFT_MISO 19
-//#define TFT_MOSI 23
-//#define TFT_SCLK 18
-//#define TFT_CS   14  // Chip select control pin
-//#define TFT_DC   27  // Data Command control pin
-//#define TFT_RST  33  // Reset pin (could connect to Arduino RESET pin)
-//#define TFT_BL   32  // LED back-light
+// #define TFT_MISO 19
+// #define TFT_MOSI 23
+// #define TFT_SCLK 18
+// #define TFT_CS   14      // Chip select control pin
+// #define TFT_DC   27      // Data Command control pin
+// #define TFT_RST  33      // Reset pin (could connect to Arduino RESET pin)
+// #define TFT_BL   32      // LED back-light
 
-//#define TOUCH_CS 21     // Chip select pin (T_CS) of touch screen
+// #define TOUCH_CS 21      // Chip select pin (T_CS) of touch screen
 
-//#define TFT_WR 22    // Write strobe for modified Raspberry Pi TFT only
+// #define TFT_WR   22      // Write strobe for modified Raspberry Pi TFT only
 
 // ######       EDIT THE PINs BELOW TO SUIT YOUR ESP32 PARALLEL TFT SETUP        ######
 
@@ -163,21 +166,21 @@
 //#define ESP32_PARALLEL
 
 // The ESP32 and TFT the pins used for testing are:
-//#define TFT_CS   33  // Chip select control pin (library pulls permanently low
-//#define TFT_DC   15  // Data Command control pin - use a pin in the range 0-31
-//#define TFT_RST  32  // Reset pin, toggles on startup
+// #define TFT_CS   33      // Chip select control pin (library pulls permanently low
+// #define TFT_DC   15      // Data Command control pin - use a pin in the range 0-31
+// #define TFT_RST  32      // Reset pin, toggles on startup
 
-//#define TFT_WR    4  // Write strobe control pin - use a pin in the range 0-31
-//#define TFT_RD    2  // Read strobe control pin  - use a pin in the range 0-31
+// #define TFT_WR    4      // Write strobe control pin - use a pin in the range 0-31
+// #define TFT_RD    2      // Read strobe control pin  - use a pin in the range 0-31
 
-//#define TFT_D0   12  // Must use pins in the range 0-31 for the data bus
-//#define TFT_D1   13  // so a single register write sets/clears all bits.
-//#define TFT_D2   26  // Pins can be randomly assigned, this does not affect
-//#define TFT_D3   25  // TFT screen update performance.
-//#define TFT_D4   17
-//#define TFT_D5   16
-//#define TFT_D6   27
-//#define TFT_D7   14
+// #define TFT_D0   12      // Must use pins in the range 0-31 for the data bus
+// #define TFT_D1   13      // so a single register write sets/clears all bits.
+// #define TFT_D2   26      // Pins can be randomly assigned, this does not affect
+// #define TFT_D3   25      // TFT screen update performance.
+// #define TFT_D4   17
+// #define TFT_D5   16
+// #define TFT_D6   27
+// #define TFT_D7   14
 
 // ##################################################################################
 //
