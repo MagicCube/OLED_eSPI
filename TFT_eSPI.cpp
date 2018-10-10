@@ -26,13 +26,6 @@
   #define SUPPORT_TRANSACTIONS
 #endif
 
-// If it is a 16bit serial display we must transfer 16 bits every time
-#ifdef RPI_ILI9486_DRIVER
-  #define CMD_BITS 16-1
-#else
-  #define CMD_BITS 8-1
-#endif
-
 // Fast block write prototype
 void writeBlock(uint16_t color, uint32_t repeat);
 
@@ -1929,8 +1922,7 @@ void TFT_eSPI::drawChar(int32_t x, int32_t y, unsigned char c, uint32_t color, u
 #if defined (ESP8266) && !defined (ILI9486_DRIVER) && !defined (ILI9488_DRIVER)
     color = (color >> 8) | (color << 8);
     bg = (bg >> 8) | (bg << 8);
-    uint32_t spimask = ~((SPIMMOSI << SPILMOSI) | (SPIMMISO << SPILMISO));
-    SPI1U1 = (SPI1U1 & spimask) | (15 << SPILMOSI) | (15 << SPILMISO);
+    SPI1U1 = D16_MASK;
     for (int8_t j = 0; j < 8; j++) {
       for (int8_t k = 0; k < 5; k++ ) {
         if (column[k] & mask) {
@@ -2164,7 +2156,7 @@ void TFT_eSPI::setWindow(int16_t x0, int16_t y0, int16_t x1, int16_t y1)
 ***************************************************************************************/
 // Chip select stays low, use setWindow() from sketches
 
-#if defined (ESP8266) && !defined (RPI_WRITE_STROBE) && !defined (RPI_ILI9486_DRIVER)
+#if defined (ESP8266) && !defined (RPI_WRITE_STROBE)
 inline void TFT_eSPI::setAddrWindow(int32_t xs, int32_t ys, int32_t xe, int32_t ye)
 {
   //spi_begin();
@@ -2176,189 +2168,36 @@ inline void TFT_eSPI::setAddrWindow(int32_t xs, int32_t ys, int32_t xe, int32_t 
   ye+=rowstart;
 #endif
 
-  // Column addr set
-  DC_C;
-  CS_L;
-
-  uint32_t mask = ~((SPIMMOSI << SPILMOSI) | (SPIMMISO << SPILMISO));
-  mask = SPI1U1 & mask;
-
-  SPI1U1 = mask | (CMD_BITS << SPILMOSI) | (CMD_BITS << SPILMISO);
-
-  SPI1W0 = TFT_CASET;
-  SPI1CMD |= SPIBUSY;
-
   addr_col = 0xFFFF;
   addr_row = 0xFFFF;
-  
-  while(SPI1CMD & SPIBUSY) {}
 
-  DC_D;
-
-  SPI1U1 = mask | (31 << SPILMOSI) | (31 << SPILMISO);
-  // Load the two coords as a 32 bit value and shift in one go
-  SPI1W0 = (xs >> 8) | (uint16_t)(xs << 8) | ((uint8_t)(xe >> 8)<<16 | (xe << 24));
-  SPI1CMD |= SPIBUSY;
-  while(SPI1CMD & SPIBUSY) {}
-
-  // Row addr set
-  DC_C;
-
-  SPI1U1 = mask | (CMD_BITS << SPILMOSI) | (CMD_BITS << SPILMISO);
-
-  SPI1W0 = TFT_PASET;
-  SPI1CMD |= SPIBUSY;
-  while(SPI1CMD & SPIBUSY) {}
-
-  DC_D;
-
-  SPI1U1 = mask | (31 << SPILMOSI) | (31 << SPILMISO);
-  // Load the two coords as a 32 bit value and shift in one go
-  SPI1W0 = (ys >> 8) | (uint16_t)(ys << 8) | ((uint8_t)(ye >> 8)<<16 | (ye << 24));
-  SPI1CMD |= SPIBUSY;
-  while(SPI1CMD & SPIBUSY) {}
-
-  // write to RAM
-  DC_C;
-
-  SPI1U1 = mask | (CMD_BITS << SPILMOSI) | (CMD_BITS << SPILMISO);
-  SPI1W0 = TFT_RAMWR;
-  SPI1CMD |= SPIBUSY;
-  while(SPI1CMD & SPIBUSY) {}
-
-  DC_D;
-
-  //spi_end();
-}
-
-#elif defined (ESP8266) && !defined (RPI_WRITE_STROBE) && defined (RPI_ILI9486_DRIVER) // This is for the RPi display that needs 16 bits
-
-void TFT_eSPI::setAddrWindow(int32_t xs, int32_t ys, int32_t xe, int32_t ye)
-{
-  //spi_begin();
-
-  addr_col = 0xFFFF;
-  addr_row = 0xFFFF;
-  
   // Column addr set
-  DC_C;
   CS_L;
-
-  uint32_t mask = ~((SPIMMOSI << SPILMOSI) | (SPIMMISO << SPILMISO));
-  mask = SPI1U1 & mask;
-
-  SPI1U1 = mask | (CMD_BITS << SPILMOSI) | (CMD_BITS << SPILMISO);
-
-  SPI1W0 = TFT_CASET<<8;
-  SPI1CMD |= SPIBUSY;
-  while(SPI1CMD & SPIBUSY) {}
-
-  DC_D;
-
-  uint8_t xBin[] = { 0, (uint8_t) (xs>>8), 0, (uint8_t) (xs>>0), 0, (uint8_t) (xe>>8), 0, (uint8_t) (xe>>0), };
-  SPI.writePattern(&xBin[0], 8, 1);
-
-  // Row addr set
-  DC_C;
-
-  SPI1U1 = mask | (CMD_BITS << SPILMOSI) | (CMD_BITS << SPILMISO);
-
-  SPI1W0 = TFT_PASET<<8;
-  SPI1CMD |= SPIBUSY;
-  while(SPI1CMD & SPIBUSY) {}
-
-  DC_D;
-
-  uint8_t yBin[] = { 0, (uint8_t) (ys>>8), 0, (uint8_t) (ys>>0), 0, (uint8_t) (ye>>8), 0, (uint8_t) (ye>>0), };
-  SPI.writePattern(&yBin[0], 8, 1);
-
-  // write to RAM
-  DC_C;
-
-  SPI1U1 = mask | (CMD_BITS << SPILMOSI) | (CMD_BITS << SPILMISO);
-  SPI1W0 = TFT_RAMWR<<8;
-  SPI1CMD |= SPIBUSY;
-  while(SPI1CMD & SPIBUSY) {}
-
-  DC_D;
-
-  //spi_end();
-}
-
+#ifdef RPI_ILI9486_DRIVER
+  write_C16(TFT_CASET<<8);
 #else
+  write_C8(TFT_CASET);
+#endif
 
-#if defined (ESP8266) && defined (RPI_ILI9486_DRIVER) // This is for the RPi display that needs 16 bits
-inline void TFT_eSPI::setAddrWindow(int32_t x0, int32_t y0, int32_t x1, int32_t y1)
-{
-  //spi_begin();
+  // Load the two coords as a 32 bit value and shift in one go
+  write_32((xs >> 8) | (uint16_t)(xs << 8) | ((uint8_t)(xe >> 8)<<16 | (xe << 24)));
 
-  CS_L;
-  uint32_t mask = ~((SPIMMOSI << SPILMOSI) | (SPIMMISO << SPILMISO));
-  mask = SPI1U1 & mask;
-  SPI1U1 = mask | (CMD_BITS << SPILMOSI) | (CMD_BITS << SPILMISO);
-
-  // Column addr set
-  DC_C;
-
-  SPI1W0 = TFT_CASET<<(CMD_BITS + 1 - 8);
-  SPI1CMD |= SPIBUSY;
-  addr_col = 0xFFFF; // Use the waiting time to do something useful
-  addr_row = 0xFFFF;
-  while(SPI1CMD & SPIBUSY) {}
-  DC_D;
-
-  SPI1W0 = x0 >> 0;
-  SPI1CMD |= SPIBUSY;
-  x0 = x0 << 8; // Use the waiting time to do something useful
-  while(SPI1CMD & SPIBUSY) {}
-
-  SPI1W0 = x0;
-  SPI1CMD |= SPIBUSY;
-  while(SPI1CMD & SPIBUSY) {}
-
-  SPI1W0 = x1 >> 0;
-  SPI1CMD |= SPIBUSY;
-  x1 = x1 << 8; // Use the waiting time to do something useful
-  while(SPI1CMD & SPIBUSY) {}
-
-  SPI1W0 = x1;
-  SPI1CMD |= SPIBUSY;
-  while(SPI1CMD & SPIBUSY) {}
-  
   // Row addr set
-  DC_C;
+#ifdef RPI_ILI9486_DRIVER
+  write_C16(TFT_PASET<<8);
+#else
+  write_C8(TFT_PASET);
+#endif
 
-  SPI1W0 = TFT_PASET<<(CMD_BITS + 1 - 8);
-  SPI1CMD |= SPIBUSY;
-  while(SPI1CMD & SPIBUSY) {}
-  DC_D;
+  // Load the two coords as a 32 bit value and shift in one go
+  write_32((ys >> 8) | (uint16_t)(ys << 8) | ((uint8_t)(ye >> 8)<<16 | (ye << 24)));
 
-  SPI1W0 = y0 >> 0;
-  SPI1CMD |= SPIBUSY;
-  y0 = y0 << 8; // Use the waiting time to do something useful
-  while(SPI1CMD & SPIBUSY) {}
-
-  SPI1W0 = y0;
-  SPI1CMD |= SPIBUSY;
-  while(SPI1CMD & SPIBUSY) {}
-
-  SPI1W0 = y1 >> 0;
-  SPI1CMD |= SPIBUSY;
-  y1 = y1 << 8; // Use the waiting time to do something useful
-  while(SPI1CMD & SPIBUSY) {}
-
-  SPI1W0 = y1;
-  SPI1CMD |= SPIBUSY;
-  while(SPI1CMD & SPIBUSY) {}
-  
   // write to RAM
-  DC_C;
-
-  SPI1W0 = TFT_RAMWR<<(CMD_BITS + 1 - 8);
-  SPI1CMD |= SPIBUSY;
-  while(SPI1CMD & SPIBUSY) {}
-
-  DC_D;
+#ifdef RPI_ILI9486_DRIVER
+  write_C16(TFT_RAMWR<<8);
+#else
+  write_C8(TFT_RAMWR);
+#endif
 
   //spi_end();
 }
@@ -2526,7 +2365,6 @@ inline void TFT_eSPI::setAddrWindow(int32_t x0, int32_t y0, int32_t x1, int32_t 
 
   //spi_end();
 }
-#endif // end RPI_ILI9486_DRIVER check
 #endif // end ESP32 check
 
 
@@ -2549,30 +2387,22 @@ void TFT_eSPI::drawPixel(uint32_t x, uint32_t y, uint32_t color)
 
   CS_L;
 
-  uint32_t mask = ~((SPIMMOSI << SPILMOSI) | (SPIMMISO << SPILMISO));
-  mask = SPI1U1 & mask;
   // No need to send x if it has not changed (speeds things up)
   if (addr_col != x) {
 
-    DC_C;
-
-    SPI1U1 = mask | (CMD_BITS << SPILMOSI) | (CMD_BITS << SPILMISO);
-    SPI1W0 = TFT_CASET<<(CMD_BITS + 1 - 8);
-    SPI1CMD |= SPIBUSY;
-    while(SPI1CMD & SPIBUSY) {}
-
-    DC_D;
+#ifdef RPI_ILI9486_DRIVER
+  write_C16(TFT_CASET<<8);
+#else
+  write_C8(TFT_CASET);
+#endif
 
 #if defined (RPI_ILI9486_DRIVER) // This is for the RPi display that needs 16 bits per byte
     uint8_t cBin[] = { 0, (uint8_t) (x>>8), 0, (uint8_t) (x>>0)};
     SPI.writePattern(&cBin[0], 4, 2);
 #else
-    SPI1U1 = mask | (31 << SPILMOSI) | (31 << SPILMISO);
     // Load the two coords as a 32 bit value and shift in one go
     uint32_t xswap = (x >> 8) | (uint16_t)(x << 8);
-    SPI1W0 = xswap | (xswap << 16);
-    SPI1CMD |= SPIBUSY;
-    while(SPI1CMD & SPIBUSY) {}
+    write_32(xswap | (xswap << 16));
 #endif
 
     addr_col = x;
@@ -2580,138 +2410,35 @@ void TFT_eSPI::drawPixel(uint32_t x, uint32_t y, uint32_t color)
 
   // No need to send y if it has not changed (speeds things up)
   if (addr_row != y) {
-
-    DC_C;
-
-    SPI1U1 = mask | (CMD_BITS << SPILMOSI) | (CMD_BITS << SPILMISO);
-
-    SPI1W0 = TFT_PASET<<(CMD_BITS + 1 - 8);
-    SPI1CMD |= SPIBUSY;
-    while(SPI1CMD & SPIBUSY) {}
-
-    DC_D;
+#ifdef RPI_ILI9486_DRIVER
+    write_C16(TFT_PASET<<8);
+#else
+    write_C8(TFT_PASET);
+#endif
 
 #if defined (RPI_ILI9486_DRIVER) // This is for the RPi display that needs 16 bits per byte
     uint8_t cBin[] = { 0, (uint8_t) (y>>8), 0, (uint8_t) (y>>0)};
     SPI.writePattern(&cBin[0], 4, 2);
 #else
-    SPI1U1 = mask | (31 << SPILMOSI) | (31 << SPILMISO);
     // Load the two coords as a 32 bit value and shift in one go
     uint32_t yswap = (y >> 8) | (uint16_t)(y << 8);
-    SPI1W0 = yswap | (yswap << 16);
-    SPI1CMD |= SPIBUSY;
-    while(SPI1CMD & SPIBUSY) {}
+    write_32(yswap | (yswap << 16));
 #endif
 
     addr_row = y;
   }
 
-  DC_C;
-
-  SPI1U1 = mask | (CMD_BITS << SPILMOSI) | (CMD_BITS << SPILMISO);
-
-  SPI1W0 = TFT_RAMWR<<(CMD_BITS + 1 - 8);
-  SPI1CMD |= SPIBUSY;
-  while(SPI1CMD & SPIBUSY) {}
-
-  DC_D;
+#ifdef RPI_ILI9486_DRIVER
+  write_C16(TFT_RAMWR<<8);
+#else
+  write_C8(TFT_RAMWR);
+#endif
 
 #if defined (ILI9486_DRIVER) || defined (ILI9488_DRIVER)
   tft_Write_16(color);
 #else
-  SPI1U1 = mask | (15 << SPILMOSI) | (15 << SPILMISO);
-
-  SPI1W0 = (color >> 8) | (color << 8);
-  SPI1CMD |= SPIBUSY;
-  while(SPI1CMD & SPIBUSY) {}
+  write_16((color >> 8) | (color << 8));
 #endif
-
-  CS_H;
-
-  spi_end();
-}
-
-#else
-
-#if defined (ESP8266) && defined (RPI_ILI9486_DRIVER) // This is for the RPi display that needs 16 bits
-
-void TFT_eSPI::drawPixel(uint32_t x, uint32_t y, uint32_t color)
-{
-  // Faster range checking, possible because x and y are unsigned
-  if ((x >= _width) || (y >= _height)) return;
-  spi_begin();
-
-  CS_L;
-  uint32_t mask = ~((SPIMMOSI << SPILMOSI) | (SPIMMISO << SPILMISO));
-  mask = SPI1U1 & mask;
-  SPI1U1 = mask | (CMD_BITS << SPILMOSI) | (CMD_BITS << SPILMISO);
-  // No need to send x if it has not changed (speeds things up)
-  if (addr_col != x) {
-    DC_C;
-
-    SPI1W0 = TFT_CASET<<(CMD_BITS + 1 - 8);
-    SPI1CMD |= SPIBUSY;
-    while(SPI1CMD & SPIBUSY) {}
-    DC_D;
-
-    SPI1W0 = x >> 0;
-    SPI1CMD |= SPIBUSY;
-    while(SPI1CMD & SPIBUSY) {}
-
-    SPI1W0 = x << 8;
-    SPI1CMD |= SPIBUSY;
-    while(SPI1CMD & SPIBUSY) {}
-
-    SPI1W0 = x >> 0;
-    SPI1CMD |= SPIBUSY;
-    while(SPI1CMD & SPIBUSY) {}
-
-    SPI1W0 = x << 8;
-    SPI1CMD |= SPIBUSY;
-    while(SPI1CMD & SPIBUSY) {}
-    
-    addr_col = x;
-  }
-
-  // No need to send y if it has not changed (speeds things up)
-  if (addr_row != y) {
-    DC_C;
-
-    SPI1W0 = TFT_PASET<<(CMD_BITS + 1 - 8);
-    SPI1CMD |= SPIBUSY;
-    while(SPI1CMD & SPIBUSY) {}
-    DC_D;
-
-    SPI1W0 = y >> 0;
-    SPI1CMD |= SPIBUSY;
-    while(SPI1CMD & SPIBUSY) {}
-
-    SPI1W0 = y << 8;
-    SPI1CMD |= SPIBUSY;
-    while(SPI1CMD & SPIBUSY) {}
-
-    SPI1W0 = y >> 0;
-    SPI1CMD |= SPIBUSY;
-    while(SPI1CMD & SPIBUSY) {}
-
-    SPI1W0 = y << 8;
-    SPI1CMD |= SPIBUSY;
-    while(SPI1CMD & SPIBUSY) {}
-    
-    addr_row = y;
-  }
-
-  DC_C;
-
-  SPI1W0 = TFT_RAMWR<<(CMD_BITS + 1 - 8);
-  SPI1CMD |= SPIBUSY;
-  while(SPI1CMD & SPIBUSY) {}
-
-  DC_D;
-
-  SPI1W0 = (color >> 8) | (color << 8);
-  SPI1CMD |= SPIBUSY;
-  while(SPI1CMD & SPIBUSY) {}
 
   CS_H;
 
@@ -2778,8 +2505,7 @@ void TFT_eSPI::drawPixel(uint32_t x, uint32_t y, uint32_t color)
 
   spi_end();
 }
-#endif
-#endif
+#endif // ESP32
 
 
 /***************************************************************************************
@@ -2886,9 +2612,7 @@ void TFT_eSPI::pushColors(uint16_t *data, uint32_t len, bool swap)
 
   uint32_t color[8];
 
-  uint32_t mask = ~((SPIMMOSI << SPILMOSI) | (SPIMMISO << SPILMISO));
-
-  SPI1U1 = (SPI1U1 & mask) | (255 << SPILMOSI) | (255 << SPILMISO);
+  SPI1U1 = D256_MASK;
 
   while(len>15)
   {
@@ -2943,7 +2667,7 @@ void TFT_eSPI::pushColors(uint16_t *data, uint32_t len, bool swap)
       memcpy(color,data,len<<1);
     }
     while(SPI1CMD & SPIBUSY) {}
-    SPI1U1 = (SPI1U1 & mask) | (bits << SPILMOSI) | (bits << SPILMISO);
+    SPI1U1 = MASK | (bits << SPILMOSI) | (bits << SPILMISO);
     SPI1W0 = color[0];
     SPI1W1 = color[1];
     SPI1W2 = color[2];
@@ -3056,8 +2780,6 @@ void TFT_eSPI::drawLine(int32_t x0, int32_t y0, int32_t x1, int32_t y1, uint32_t
 
   spi_begin();
 
-  uint32_t mask = ~((SPIMMOSI << SPILMOSI) | (SPIMMISO << SPILMISO));
-  mask = (SPI1U1 & mask) | (15 << SPILMOSI) | (15 << SPILMISO);
   SPI1U = SPIUMOSI | SPIUSSE;
   int16_t swapped_color = (color >> 8) | (color << 8);
 
@@ -3077,7 +2799,7 @@ void TFT_eSPI::drawLine(int32_t x0, int32_t y0, int32_t x1, int32_t y1, uint32_t
     if (x0 > x1) {spi_end(); return;}
 
     setAddrWindow(y0, x0, y0, _height);
-    SPI1U1 = mask;
+    SPI1U1 = D16_MASK;
     SPI1W0 = swapped_color;
     for (; x0 <= x1; x0++) {
       while(SPI1CMD & SPIBUSY) {}
@@ -3090,7 +2812,7 @@ void TFT_eSPI::drawLine(int32_t x0, int32_t y0, int32_t x1, int32_t y1, uint32_t
         err += dx;
         while(SPI1CMD & SPIBUSY) {}
         setAddrWindow(y0, x0+1, y0, _height);
-        SPI1U1 = mask;
+        SPI1U1 = D16_MASK;
         SPI1W0 = swapped_color;
       }
     }
@@ -3111,7 +2833,7 @@ void TFT_eSPI::drawLine(int32_t x0, int32_t y0, int32_t x1, int32_t y1, uint32_t
     if (x0 > x1) {spi_end(); return;}
 
     setAddrWindow(x0, y0, _width, y0);
-    SPI1U1 = mask;
+    SPI1U1 = D16_MASK;
     SPI1W0 = swapped_color;
     for (; x0 <= x1; x0++) {
       while(SPI1CMD & SPIBUSY) {}
@@ -3124,7 +2846,7 @@ void TFT_eSPI::drawLine(int32_t x0, int32_t y0, int32_t x1, int32_t y1, uint32_t
         err += dx;
         while(SPI1CMD & SPIBUSY) {}
         setAddrWindow(x0+1, y0, _width, y0);
-        SPI1U1 = mask;
+        SPI1U1 = D16_MASK;
         SPI1W0 = swapped_color;
       }
     }
@@ -3172,7 +2894,7 @@ void TFT_eSPI::drawFastVLine(int32_t x, int32_t y, int32_t h, uint32_t color)
   spi_begin();
 
   setAddrWindow(x, y, x, y + h - 1);
-    
+
 #ifdef RPI_WRITE_STROBE
   #if defined (ESP8266)
     // SPI1U1 will already be set to transfer 16 bits by setAddrWindow()
@@ -4263,8 +3985,6 @@ void writeBlock(uint16_t color, uint32_t repeat)
 {
   uint16_t color16 = (color >> 8) | (color << 8);
   uint32_t color32 = color16 | color16 << 16;
-  uint32_t mask = ~(SPIMMOSI << SPILMOSI);
-  mask = SPI1U1 & mask;
   SPI1U = SPIUMOSI | SPIUSSE;
 
   SPI1W0 = color32;
@@ -4294,7 +4014,7 @@ void writeBlock(uint16_t color, uint32_t repeat)
   }
   if (repeat > 31)
   {
-    SPI1U1 = mask | (511 << SPILMOSI);
+    SPI1U1 = BLOCK_MASK | (511 << SPILMOSI);
     while(repeat>31)
     {
 #if defined SPI_FREQUENCY && (SPI_FREQUENCY == 80000000)
@@ -4310,7 +4030,7 @@ void writeBlock(uint16_t color, uint32_t repeat)
   if (repeat)
   {
     repeat = (repeat << 4) - 1;
-    SPI1U1 = mask | (repeat << SPILMOSI);
+    SPI1U1 = BLOCK_MASK | (repeat << SPILMOSI);
     SPI1CMD |= SPIBUSY;
     while(SPI1CMD & SPIBUSY) {}
   }
@@ -4323,9 +4043,6 @@ void writeBlock(uint16_t color, uint32_t repeat)
 #ifdef ESP8266
 void writeBlock(uint16_t color, uint32_t repeat)
 {
-
-  uint32_t mask = ~(SPIMMOSI << SPILMOSI);
-  mask = SPI1U1 & mask;
   SPI1U = SPIUMOSI | SPIUSSE;
 
   // Split out the colours
@@ -4366,7 +4083,7 @@ void writeBlock(uint16_t color, uint32_t repeat)
 
   if (repeat > 20)
   {
-    SPI1U1 = mask | (503 << SPILMOSI);
+    SPI1U1 = BLOCK_MASK | (503 << SPILMOSI);
     while(repeat>20)
     {
       while(SPI1CMD & SPIBUSY) {}
@@ -4379,7 +4096,7 @@ void writeBlock(uint16_t color, uint32_t repeat)
   if (repeat)
   {
     repeat = (repeat * 24) - 1;
-    SPI1U1 = mask | (repeat << SPILMOSI);
+    SPI1U1 = BLOCK_MASK | (repeat << SPILMOSI);
     SPI1CMD |= SPIBUSY;
     while(SPI1CMD & SPIBUSY) {}
   }

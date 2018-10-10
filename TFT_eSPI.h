@@ -281,6 +281,37 @@
 
 #define tft_Write_C8(C) DC_C; tft_Write_8(C); DC_D
 
+#ifdef ESP8266
+  const uint32_t MASK = (SPI1U1 & (~((SPIMMOSI << SPILMOSI) | (SPIMMISO << SPILMISO))));
+  const uint32_t D8_MASK = MASK | (7 << SPILMOSI) | (7 << SPILMISO);
+  const uint32_t D16_MASK = MASK | (15 << SPILMOSI) | (15 << SPILMISO);
+  const uint32_t D32_MASK = MASK | (31 << SPILMOSI) | (31 << SPILMISO);
+  const uint32_t D256_MASK = MASK | (255 << SPILMOSI) | (255 << SPILMISO);
+
+  const uint32_t BLOCK_MASK = SPI1U1 & (~(SPIMMOSI << SPILMOSI));
+
+  #define write_8(C) SPI1U1 = D8_MASK; SPI1W0 = C; SPI1CMD |= SPIBUSY; while(SPI1CMD & SPIBUSY) {}
+  // SPI1U1 = D8_MASK;
+  // SPI1W0 = C;
+  // SPI1CMD |= SPIBUSY;
+  // while(SPI1CMD & SPIBUSY) {}
+
+  #define write_16(C) SPI1U1 = D16_MASK; SPI1W0 = C; SPI1CMD |= SPIBUSY; while(SPI1CMD & SPIBUSY) {}
+  // SPI1U1 = D16_MASK;
+  // SPI1W0 = C;
+  // SPI1CMD |= SPIBUSY;
+  // while(SPI1CMD & SPIBUSY) {}
+
+  #define write_32(C) SPI1U1 = D32_MASK; SPI1W0 = C; SPI1CMD |= SPIBUSY; while(SPI1CMD & SPIBUSY) {}
+  // SPI1U1 = D32_MASK;
+  // SPI1W0 = C;
+  // SPI1CMD |= SPIBUSY;
+  // while(SPI1CMD & SPIBUSY) {}
+
+  #define write_C8(C) DC_C; write_8(C); DC_D
+  #define write_C16(C) DC_C; write_16(C); DC_D
+#endif
+
 #ifdef LOAD_GFXFF
   // We can include all the free fonts and they will only be built into
   // the sketch if they are used
