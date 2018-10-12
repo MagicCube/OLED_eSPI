@@ -224,12 +224,8 @@
   #define tft_Write_8(C)  GPIO.out_w1tc = clr_mask; GPIO.out_w1ts = set_mask((uint8_t)C); WR_H
 
   // Write 16 bits to TFT
-  #ifdef PSEUDO_8_BIT
-    #define tft_Write_16(C) WR_L;GPIO.out_w1tc = clr_mask; GPIO.out_w1ts = set_mask((uint8_t)(C >> 0)); WR_H
-  #else
-    #define tft_Write_16(C) GPIO.out_w1tc = clr_mask; GPIO.out_w1ts = set_mask((uint8_t)(C >> 8)); WR_H; \
+  #define tft_Write_16(C) GPIO.out_w1tc = clr_mask; GPIO.out_w1ts = set_mask((uint8_t)(C >> 8)); WR_H; \
                           GPIO.out_w1tc = clr_mask; GPIO.out_w1ts = set_mask((uint8_t)(C >> 0)); WR_H
-  #endif
 
   // 16 bit write with swapped bytes
   #define tft_Write_16S(C) GPIO.out_w1tc = clr_mask; GPIO.out_w1ts = set_mask((uint8_t) (C >>  0)); WR_H; \
@@ -279,37 +275,27 @@
 
 #endif
 
-#define tft_Write_C8(C) DC_C; tft_Write_8(C); DC_D
-
-#ifdef ESP8266
+#if defined (ESP8266)
   const uint32_t MASK = (SPI1U1 & (~((SPIMMOSI << SPILMOSI) | (SPIMMISO << SPILMISO))));
   const uint32_t D8_MASK = MASK | (7 << SPILMOSI) | (7 << SPILMISO);
   const uint32_t D16_MASK = MASK | (15 << SPILMOSI) | (15 << SPILMISO);
   const uint32_t D32_MASK = MASK | (31 << SPILMOSI) | (31 << SPILMISO);
   const uint32_t D256_MASK = MASK | (255 << SPILMOSI) | (255 << SPILMISO);
-
   const uint32_t BLOCK_MASK = SPI1U1 & (~(SPIMMOSI << SPILMOSI));
 
   #define write_8(C) SPI1U1 = D8_MASK; SPI1W0 = C; SPI1CMD |= SPIBUSY; while(SPI1CMD & SPIBUSY) {}
-  // SPI1U1 = D8_MASK;
-  // SPI1W0 = C;
-  // SPI1CMD |= SPIBUSY;
-  // while(SPI1CMD & SPIBUSY) {}
-
   #define write_16(C) SPI1U1 = D16_MASK; SPI1W0 = C; SPI1CMD |= SPIBUSY; while(SPI1CMD & SPIBUSY) {}
-  // SPI1U1 = D16_MASK;
-  // SPI1W0 = C;
-  // SPI1CMD |= SPIBUSY;
-  // while(SPI1CMD & SPIBUSY) {}
-
   #define write_32(C) SPI1U1 = D32_MASK; SPI1W0 = C; SPI1CMD |= SPIBUSY; while(SPI1CMD & SPIBUSY) {}
-  // SPI1U1 = D32_MASK;
-  // SPI1W0 = C;
-  // SPI1CMD |= SPIBUSY;
-  // while(SPI1CMD & SPIBUSY) {}
+#else
+  #define write_8(C) SPI.write(C)
+  #define write_16(C) SPI.write16(C)
+  #define write_32(C) SPI.write32(C)
+#endif
 
-  #define write_C8(C) DC_C; write_8(C); DC_D
-  #define write_C16(C) DC_C; write_16(C); DC_D
+#ifdef RPI_ILI9486_DRIVER
+  #define tft_write_cmd(C) DC_C; write_16(C<<8); DC_D
+#else
+  #define tft_write_cmd(C) DC_C; write_8(C); DC_D
 #endif
 
 #ifdef LOAD_GFXFF
