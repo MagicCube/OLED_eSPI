@@ -73,6 +73,7 @@ void setup()
   Serial.println("NodeMCU decoder test!");
 
   tft.begin();
+  // tft.invertDisplay(true);
   tft.setRotation(0);  // 0 & 2 Portrait. 1 & 3 landscape
   tft.fillScreen(TFT_BLACK);
 
@@ -96,33 +97,29 @@ void loop()
   tft.setRotation(0);  // portrait
   tft.fillScreen(random(0xFFFF));
 
-  drawJpeg("/EagleEye160.jpg", 0, 16);
+  drawJpeg("/SuccessKid96.jpg", 0, 0);
   delay(2000);
 
   tft.fillScreen(random(0xFFFF));
-  drawJpeg("/tiger160.jpg", 4, 0);
+  drawJpeg("/SuccessKid160.jpg", 0, 0);
   delay(2000);
 
   tft.setRotation(1);  // landscape
-  //tft.fillScreen(random(0xFFFF));
-  drawJpeg("/arduino160.jpg", 0, 0);
-  delay(2000);
-
-  tft.fillScreen(TFT_BLACK);
-  drawJpeg("/Baboon160.jpg", 0, 4);
+  tft.fillScreen(random(0xFFFF));
+  drawJpeg("/SuccessKid240.jpg", 0, 0);
   delay(2000);
 
   tft.fillScreen(random(0xFFFF));
-  drawJpeg("/Mouse160.jpg", 0, 11);
+  drawJpeg("/SuccessKid320.jpg", 0, 0);
   delay(2000);
 
   // Create arrays from the jpeg images and send them to the serial port for copy and
   // pasting into a sketch (used to make arrays fot the TFT_FLASH_Jpeg sketch)
 
-  //createArray("/EagleEye160.jpg");
-  //createArray("/tiger160.jpg");
-  //createArray("/Baboon160.jpg");
-  //createArray("/Mouse160.jpg");
+  //createArray("/SuccessKid96.jpg");
+  //createArray("/SuccessKid160.jpg");
+  //createArray("/SuccessKid240.jpg");
+  //createArray("/SuccessKid320.jpg");
   //while(1) yield(); // Stay here
 }
 //====================================================================================
