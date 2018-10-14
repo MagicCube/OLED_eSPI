@@ -275,7 +275,7 @@
 
 #endif
 
-#if defined (ESP8266)
+#if defined (ESP8266) && !defined (RPI_WRITE_STROBE)
   const uint32_t MASK = (SPI1U1 & (~((SPIMMOSI << SPILMOSI) | (SPIMMISO << SPILMISO))));
   const uint32_t D8_MASK = MASK | (7 << SPILMOSI) | (7 << SPILMISO);
   const uint32_t D16_MASK = MASK | (15 << SPILMOSI) | (15 << SPILMISO);
@@ -286,17 +286,20 @@
   #define write_8(C) SPI1U1 = D8_MASK; SPI1W0 = C; SPI1CMD |= SPIBUSY; while(SPI1CMD & SPIBUSY) {}
   #define write_16(C) SPI1U1 = D16_MASK; SPI1W0 = C; SPI1CMD |= SPIBUSY; while(SPI1CMD & SPIBUSY) {}
   #define write_32(C) SPI1U1 = D32_MASK; SPI1W0 = C; SPI1CMD |= SPIBUSY; while(SPI1CMD & SPIBUSY) {}
+
+  #define tft_write_8_8(C, D) write_16((uint16_t)D << 8) | C)
+  #define tft_write_16_16(C, D) write_32((C >> 8) | (uint16_t)(C << 8) | ((uint8_t)(D >> 8)<<16 | (D << 24)))
 #else
   #define write_8(C) SPI.write(C)
   #define write_16(C) SPI.write16(C)
   #define write_32(C) SPI.write32(C)
+
+  #define tft_write_8_8(C, D) write_16((uint16_t)C << 8) | D)
+  #define tft_write_16_16(C, D) write_32(((uint32_t)C << 16) | D)
 #endif
 
-#ifdef RPI_ILI9486_DRIVER
-  #define tft_write_cmd(C) DC_C; write_16(C<<8); DC_D
-#else
-  #define tft_write_cmd(C) DC_C; write_8(C); DC_D
-#endif
+#define tft_write_C8(C) DC_C; write_8(C); DC_D
+#define tft_write_C16(C) DC_C; write_16(C); DC_D
 
 #ifdef LOAD_GFXFF
   // We can include all the free fonts and they will only be built into
@@ -716,6 +719,7 @@ class TFT_eSPI : public Print {
 
   uint32_t _init_width, _init_height; // Display w/h as input, used by setRotation()
   uint32_t _width, _height;           // Display w/h as modified by current rotation
+  uint32_t addr_rs, addr_re, addr_cs, addr_ce;
   uint32_t addr_row, addr_col;
 
   uint32_t fontsloaded;
