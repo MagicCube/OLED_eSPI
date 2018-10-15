@@ -1953,11 +1953,11 @@ void TFT_eSPI::drawChar(int32_t x, int32_t y, unsigned char c, uint32_t color, u
 
     for (int8_t j = 0; j < 8; j++) {
       for (int8_t k = 0; k < 5; k++ ) {
-        if (column[k] & mask) {tft_Write_16(color);}
-        else {tft_Write_16(bg);}
+        if (column[k] & mask) {tft_Write_Color(color);}
+        else {tft_Write_Color(bg);}
       }
       mask <<= 1;
-      tft_Write_16(bg);
+      tft_Write_Color(bg);
     }
 
 #endif
@@ -2457,7 +2457,7 @@ void TFT_eSPI::drawPixel(uint32_t x, uint32_t y, uint32_t color)
 
 #if defined (HX8352C_DRIVER) || defined (ILI9225_DRIVER) || defined (SEPS525_DRIVER) || defined (SSD1331_DRIVER) || defined (SSD1351_DRIVER)
   setAddrWindow(x, y, x, y);
-  tft_Write_16(color);
+  tft_Write_Color(color);
 #else
   // No need to send x if it has not changed (speeds things up)
   if (addr_col != x) {
@@ -2492,7 +2492,7 @@ void TFT_eSPI::drawPixel(uint32_t x, uint32_t y, uint32_t color)
 
   tft_Write_C8(TFT_RAMWR);
 
-  tft_Write_16(color);
+  tft_Write_Color(color);
 #endif
 
   CS_H;
@@ -2511,7 +2511,7 @@ void TFT_eSPI::pushColor(uint16_t color)
 
   CS_L;
 
-  tft_Write_16(color);
+  tft_Write_Color(color);
 
   CS_H;
 
@@ -2535,7 +2535,7 @@ void TFT_eSPI::pushColor(uint16_t color, uint32_t len)
   while(len--) {WR_L; WR_H;}
 #else
   #if defined (ESP32_PARALLEL)
-    while (len--) {tft_Write_16(color);}
+    while (len--) {tft_Write_Color(color);}
   #else
     writeBlock(color, len);
   #endif
@@ -2566,7 +2566,7 @@ void TFT_eSPI::pushColors(uint8_t *data, uint32_t len)
     while (len--) {tft_Write_8(*data); data++;}
   #elif defined (ILI9486_DRIVER) || defined (ILI9488_DRIVER)
     uint16_t color;
-    while (len>1) {color = (*data++) | ((*data++)<<8); tft_Write_16(color); len-=2;}
+    while (len>1) {color = (*data++) | ((*data++)<<8); tft_Write_Color(color); len-=2;}
   #else
     #if (SPI_FREQUENCY == 80000000)
       while ( len >=64 ) {SPI.writePattern(data, 64, 1); data += 64; len -= 64; }
@@ -2595,8 +2595,8 @@ void TFT_eSPI::pushColors(uint16_t *data, uint32_t len, bool swap)
 
 #if defined (ESP32) || defined (ILI9486_DRIVER) || defined (ILI9488_DRIVER)
   #if defined (ESP32_PARALLEL) || defined (ILI9486_DRIVER) || defined (ILI9488_DRIVER)
-    if (swap) while ( len-- ) {tft_Write_16(*data); data++;}
-    else while ( len-- ) {tft_Write_16S(*data); data++;}
+    if (swap) while ( len-- ) {tft_Write_Color(*data); data++;}
+    else while ( len-- ) {tft_Write_ColorS(*data); data++;}
   #else
     if (swap) SPI.writePixels(data,len<<1);
     else SPI.writeBytes((uint8_t*)data,len<<1);
@@ -2749,7 +2749,6 @@ void TFT_eSPI::drawLine(int32_t x0, int32_t y0, int32_t x1, int32_t y1, uint32_t
 // This is a weeny bit faster
 void TFT_eSPI::drawLine(int32_t x0, int32_t y0, int32_t x1, int32_t y1, uint32_t color)
 {
-
   boolean steep = abs(y1 - y0) > abs(x1 - x0);
 
   if (steep) {
@@ -2775,6 +2774,7 @@ void TFT_eSPI::drawLine(int32_t x0, int32_t y0, int32_t x1, int32_t y1, uint32_t
 
   SPI1U = SPIUMOSI | SPIUSSE;
   int16_t swapped_color = (color >> 8) | (color << 8);
+  uint32_t mask = D16_MASK;
 
   if (steep)  // y increments every iteration (y0 is x-axis, and x0 is y-axis)
   {
@@ -2792,7 +2792,7 @@ void TFT_eSPI::drawLine(int32_t x0, int32_t y0, int32_t x1, int32_t y1, uint32_t
     if (x0 > x1) {spi_end(); return;}
 
     setAddrWindow(y0, x0, y0, _height);
-    SPI1U1 = D16_MASK;
+    SPI1U1 = mask;
     SPI1W0 = swapped_color;
     for (; x0 <= x1; x0++) {
       while(SPI1CMD & SPIBUSY) {}
@@ -2805,7 +2805,7 @@ void TFT_eSPI::drawLine(int32_t x0, int32_t y0, int32_t x1, int32_t y1, uint32_t
         err += dx;
         while(SPI1CMD & SPIBUSY) {}
         setAddrWindow(y0, x0+1, y0, _height);
-        SPI1U1 = D16_MASK;
+        SPI1U1 = mask;
         SPI1W0 = swapped_color;
       }
     }
@@ -2826,7 +2826,7 @@ void TFT_eSPI::drawLine(int32_t x0, int32_t y0, int32_t x1, int32_t y1, uint32_t
     if (x0 > x1) {spi_end(); return;}
 
     setAddrWindow(x0, y0, _width, y0);
-    SPI1U1 = D16_MASK;
+    SPI1U1 = mask;
     SPI1W0 = swapped_color;
     for (; x0 <= x1; x0++) {
       while(SPI1CMD & SPIBUSY) {}
@@ -2839,7 +2839,7 @@ void TFT_eSPI::drawLine(int32_t x0, int32_t y0, int32_t x1, int32_t y1, uint32_t
         err += dx;
         while(SPI1CMD & SPIBUSY) {}
         setAddrWindow(x0+1, y0, _width, y0);
-        SPI1U1 = D16_MASK;
+        SPI1U1 = mask;
         SPI1W0 = swapped_color;
       }
     }
@@ -2895,13 +2895,13 @@ void TFT_eSPI::drawFastVLine(int32_t x, int32_t y, int32_t h, uint32_t color)
     SPI1CMD |= SPIBUSY;
     while(SPI1CMD & SPIBUSY) {}
   #else
-    tft_Write_16(color);
+    tft_Write_Color(color);
   #endif
     h--;
     while(h--) {WR_L; WR_H;}
 #else
   #ifdef ESP32_PARALLEL
-    while (h--) {tft_Write_16(color);}
+    while (h--) {tft_Write_Color(color);}
   #else
     writeBlock(color, h);
   #endif
@@ -2953,13 +2953,13 @@ void TFT_eSPI::drawFastHLine(int32_t x, int32_t y, int32_t w, uint32_t color)
     SPI1CMD |= SPIBUSY;
     while(SPI1CMD & SPIBUSY) {}
   #else
-    tft_Write_16(color);
+    tft_Write_Color(color);
   #endif
     w--;
     while(w--) {WR_L; WR_H;}
 #else
   #ifdef ESP32_PARALLEL
-    while (w--) {tft_Write_16(color);}
+    while (w--) {tft_Write_Color(color);}
   #else
     writeBlock(color, w);
   #endif
@@ -3008,7 +3008,7 @@ void TFT_eSPI::fillRect(int32_t x, int32_t y, int32_t w, int32_t h, uint32_t col
   uint32_t n = (uint32_t)w * (uint32_t)h;
 
 #ifdef RPI_WRITE_STROBE
-  tft_Write_16(color);
+  tft_Write_Color(color);
   while(n--) {WR_L; WR_H;}
 #else
   #ifdef ESP32_PARALLEL
@@ -3020,7 +3020,7 @@ void TFT_eSPI::fillRect(int32_t x, int32_t y, int32_t w, int32_t h, uint32_t col
     }
     else
     {
-      while (n--) {tft_Write_16(color);}
+      while (n--) {tft_Write_Color(color);}
     }
   #else
     writeBlock(color, n);
@@ -3384,8 +3384,8 @@ int16_t TFT_eSPI::drawChar(unsigned int uniCode, int x, int y, int font)
           pX = x + k * 8;
           mask = 0x80;
           while (mask) {
-            if (line & mask) {tft_Write_16(textcolor);}
-            else {tft_Write_16(textbgcolor);}
+            if (line & mask) {tft_Write_Color(textcolor);}
+            else {tft_Write_Color(textbgcolor);}
             mask = mask >> 1;
           }
         }
@@ -3439,9 +3439,9 @@ int16_t TFT_eSPI::drawChar(unsigned int uniCode, int x, int y, int font)
 
             if (ts) {
               tnp = np;
-              while (tnp--) {tft_Write_16(textcolor);}
+              while (tnp--) {tft_Write_Color(textcolor);}
             }
-            else {tft_Write_16(textcolor);}
+            else {tft_Write_Color(textcolor);}
             px += textsize;
 
             if (px >= (x + width * textsize))
@@ -3483,7 +3483,7 @@ int16_t TFT_eSPI::drawChar(unsigned int uniCode, int x, int y, int font)
           while(line--) {WR_L; WR_H;}
 #else
           #ifdef ESP32_PARALLEL
-            while (line--) {tft_Write_16(textcolor);}
+            while (line--) {tft_Write_Color(textcolor);}
           #else
             writeBlock(textcolor,line);
           #endif
@@ -3496,7 +3496,7 @@ int16_t TFT_eSPI::drawChar(unsigned int uniCode, int x, int y, int font)
           while(line--) {WR_L; WR_H;}
 #else
           #ifdef ESP32_PARALLEL
-            while (line--) {tft_Write_16(textbgcolor);}
+            while (line--) {tft_Write_Color(textbgcolor);}
           #else
             writeBlock(textbgcolor,line);
           #endif

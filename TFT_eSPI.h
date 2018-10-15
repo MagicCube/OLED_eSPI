@@ -243,31 +243,35 @@
     #define RD_H GPIO.out_w1ts = (1 << TFT_RD)
     //#define RD_H digitalWrite(TFT_WR, HIGH)
   #endif
-
-#elif defined (ILI9486_DRIVER) || defined (ILI9488_DRIVER) // 16 bit colour converted to 3 bytes for 18 bit RGB
-
-  // Write 8 bits to TFT
-  #define tft_Write_8(C)  SPI.transfer(C)
-
-  // Convert 16 bit colour to 18 bit and write in 3 bytes
-  #define tft_Write_16(C) SPI.transfer((C & 0xF800)>>8); \
-                          SPI.transfer((C & 0x07E0)>>3); \
-                          SPI.transfer((C & 0x001F)<<3)
-
-  // Convert swapped byte 16 bit colour to 18 bit and write in 3 bytes
-  #define tft_Write_16S(C) SPI.transfer(C & 0xF8); \
-                           SPI.transfer((C & 0xE0)>>11 | (C & 0x07)<<5); \
-                           SPI.transfer((C & 0x1F00)>>5)
-  // Write 32 bits to TFT
-  #define tft_Write_32(C) SPI.write32(C)
-
-#elif defined (RPI_ILI9486_DRIVER)
-  #define tft_Write_8(C)  SPI.transfer(0); SPI.transfer(C)
+#elif defined (ESP8266)
+  #define tft_Write_8(C) write_8(C)
+  #define tft_Write_16(C) write_16(C)
+  #define tft_Write_16S(C) write_16(((uint16_t)C << 8) | (C >> 8))
+  #define tft_Write_32(C) write_32(C)
+#elif defined (ESP32)
+  #define tft_Write_8(C) write_8(C)
+  #define tft_Write_16(C) write_16(C)
+  #define tft_Write_16S(C) write_16(((uint16_t)C << 8) | (C >> 8))
+  #define tft_Write_32(C) write_32(C)
+#else
+  #define tft_Write_8(C)  SPI.write(C)
   #define tft_Write_16(C) SPI.write16(C)
   #define tft_Write_32(C) SPI.write32(C)
+#endif
+
+#if defined (ILI9486_DRIVER) || defined (ILI9488_DRIVER) // 16 bit colour converted to 3 bytes for 18 bit RGB
+  // Convert 16 bit colour to 18 bit and write in 3 bytes
+  #define tft_Write_Color(C) tft_Write_8((C & 0xF800) >> 8); \
+                             tft_Write_8((C & 0x07E0) >> 3); \
+                             tft_Write_8((C & 0x001F) << 3)
+
+  // Convert swapped byte 16 bit colour to 18 bit and write in 3 bytes
+  #define tft_Write_ColorS(C) tft_Write_8(C & 0xF8); \
+                              tft_Write_8((C & 0xE0) >> 11 | (C & 0x07) << 5); \
+                              tft_Write_8((C & 0x1F00) >> 5)
 #else
-  #define tft_Write_8(C) write_8(C)
-  #define tft_Write_16(C) write_16(((uint16_t)C << 8) | (C >> 8))
+  #define tft_Write_Color(C) tft_Write_16S(C)
+  #define tft_Write_ColorS(C) tft_Write_16(C)
 #endif
 
 #if defined (ESP8266)
