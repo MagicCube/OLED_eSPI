@@ -261,21 +261,16 @@
   // Write 32 bits to TFT
   #define tft_Write_32(C) SPI.write32(C)
 
-#elif  defined (RPI_ILI9486_DRIVER)
-
+#elif defined (RPI_ILI9486_DRIVER)
   #define tft_Write_8(C)  SPI.transfer(0); SPI.transfer(C)
   #define tft_Write_16(C) SPI.write16(C)
   #define tft_Write_32(C) SPI.write32(C)
-
 #else
-
-  #define tft_Write_8(C)  SPI.write(C)
-  #define tft_Write_16(C) SPI.write16(C)
-  #define tft_Write_32(C) SPI.write32(C)
-
+  #define tft_Write_8(C) write_8(C)
+  #define tft_Write_16(C) write_16(((uint16_t)C << 8) | (C >> 8))
 #endif
 
-#if defined (ESP8266) && !defined (RPI_WRITE_STROBE)
+#if defined (ESP8266)
   const uint32_t MASK = (SPI1U1 & (~((SPIMMOSI << SPILMOSI) | (SPIMMISO << SPILMISO))));
   const uint32_t D8_MASK = MASK | (7 << SPILMOSI) | (7 << SPILMISO);
   const uint32_t D16_MASK = MASK | (15 << SPILMOSI) | (15 << SPILMISO);
@@ -286,6 +281,37 @@
   #define write_8(C) SPI1U1 = D8_MASK; SPI1W0 = C; SPI1CMD |= SPIBUSY; while(SPI1CMD & SPIBUSY) {}
   #define write_16(C) SPI1U1 = D16_MASK; SPI1W0 = C; SPI1CMD |= SPIBUSY; while(SPI1CMD & SPIBUSY) {}
   #define write_32(C) SPI1U1 = D32_MASK; SPI1W0 = C; SPI1CMD |= SPIBUSY; while(SPI1CMD & SPIBUSY) {}
+
+  #define tft_write_8_8(C, D) write_16(((uint16_t)D << 8) | C)
+  #define tft_write_16_16(C, D) write_32((C >> 8) | (uint16_t)(C << 8) | ((uint8_t)(D >> 8)<<16 | (D << 24)))
+#elif defined (ESP32)
+  #include "soc/spi_reg.h"
+  #define SPI_NUM 0x3
+
+  const uint32_t MASK = ((*((volatile uint32_t *)ETS_UNCACHED_ADDR(SPI_MOSI_DLEN_REG(SPI_NUM))))&(~((SPI_USR_MOSI_DBITLEN)<<(SPI_USR_MOSI_DBITLEN_S))));
+  const uint32_t D8_MASK = MASK|(((7) & SPI_USR_MOSI_DBITLEN)<<(SPI_USR_MOSI_DBITLEN_S));
+  const uint32_t D16_MASK = MASK|(((15) & SPI_USR_MOSI_DBITLEN)<<(SPI_USR_MOSI_DBITLEN_S));
+  const uint32_t D32_MASK = MASK|(((31) & SPI_USR_MOSI_DBITLEN)<<(SPI_USR_MOSI_DBITLEN_S));
+  const uint32_t D480_MASK = MASK|(((479) & SPI_USR_MOSI_DBITLEN)<<(SPI_USR_MOSI_DBITLEN_S));
+  const uint32_t D512_MASK = MASK|(((511) & SPI_USR_MOSI_DBITLEN)<<(SPI_USR_MOSI_DBITLEN_S));
+
+  #define write_8(C) \
+WRITE_PERI_REG((SPI_MOSI_DLEN_REG(SPI_NUM)), D8_MASK); \
+WRITE_PERI_REG(SPI_W0_REG(SPI_NUM), C); \
+SET_PERI_REG_MASK(SPI_CMD_REG(SPI_NUM), SPI_USR); \
+while (READ_PERI_REG(SPI_CMD_REG(SPI_NUM))&SPI_USR)
+
+  #define write_16(C) \
+WRITE_PERI_REG((SPI_MOSI_DLEN_REG(SPI_NUM)), D16_MASK); \
+WRITE_PERI_REG(SPI_W0_REG(SPI_NUM), C); \
+SET_PERI_REG_MASK(SPI_CMD_REG(SPI_NUM), SPI_USR); \
+while (READ_PERI_REG(SPI_CMD_REG(SPI_NUM))&SPI_USR)
+
+  #define write_32(C) \
+WRITE_PERI_REG((SPI_MOSI_DLEN_REG(SPI_NUM)), D32_MASK); \
+WRITE_PERI_REG(SPI_W0_REG(SPI_NUM), C); \
+SET_PERI_REG_MASK(SPI_CMD_REG(SPI_NUM), SPI_USR); \
+while (READ_PERI_REG(SPI_CMD_REG(SPI_NUM))&SPI_USR)
 
   #define tft_write_8_8(C, D) write_16((uint16_t)D << 8) | C)
   #define tft_write_16_16(C, D) write_32((C >> 8) | (uint16_t)(C << 8) | ((uint8_t)(D >> 8)<<16 | (D << 24)))
@@ -298,7 +324,7 @@
   #define tft_write_16_16(C, D) write_32(((uint32_t)C << 16) | D)
 #endif
 
-#define tft_write_C8(C) DC_C; write_8(C); DC_D
+#define tft_Write_C8(C) DC_C; write_8(C); DC_D
 #define tft_write_C16(C) DC_C; write_16(C); DC_D
 
 #ifdef LOAD_GFXFF
