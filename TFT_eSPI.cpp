@@ -3973,65 +3973,7 @@ void TFT_eSPI::setTextFont(uint8_t f)
 //       TFT_eSPI       98.06%              97.59%          94.24%
 //       Adafruit_GFX   19.62%              14.31%           7.94%
 //
-#if defined (ESP8266) && !defined (ILI9486_DRIVER) && !defined (ILI9488_DRIVER)
-void writeBlock(uint16_t color, uint32_t repeat)
-{
-  uint16_t color16 = (color >> 8) | (color << 8);
-  uint32_t color32 = color16 | color16 << 16;
-  SPI1U = SPIUMOSI | SPIUSSE;
-
-  SPI1W0 = color32;
-  SPI1W1 = color32;
-  SPI1W2 = color32;
-  SPI1W3 = color32;
-  if (repeat > 8)
-  {
-    SPI1W4 = color32;
-    SPI1W5 = color32;
-    SPI1W6 = color32;
-    SPI1W7 = color32;
-  }
-  if (repeat > 16)
-  {
-    SPI1W8 = color32;
-    SPI1W9 = color32;
-    SPI1W10 = color32;
-    SPI1W11 = color32;
-  }
-  if (repeat > 24)
-  {
-    SPI1W12 = color32;
-    SPI1W13 = color32;
-    SPI1W14 = color32;
-    SPI1W15 = color32;
-  }
-  if (repeat > 31)
-  {
-    SPI1U1 = BLOCK_MASK | (511 << SPILMOSI);
-    while(repeat>31)
-    {
-#if defined SPI_FREQUENCY && (SPI_FREQUENCY == 80000000)
-      if(SPI1CMD & SPIBUSY) // added to sync with flag change
-#endif
-      while(SPI1CMD & SPIBUSY) {}
-      SPI1CMD |= SPIBUSY;
-      repeat -= 32;
-    }
-    while(SPI1CMD & SPIBUSY) {}
-  }
-
-  if (repeat)
-  {
-    repeat = (repeat << 4) - 1;
-    SPI1U1 = BLOCK_MASK | (repeat << SPILMOSI);
-    SPI1CMD |= SPIBUSY;
-    while(SPI1CMD & SPIBUSY) {}
-  }
-
-  SPI1U = SPIUMOSI | SPIUDUPLEX | SPIUSSE;
-}
-
-#elif defined (ILI9486_DRIVER) || defined (ILI9488_DRIVER)
+#if defined (ILI9486_DRIVER) || defined (ILI9488_DRIVER)
 
 #ifdef ESP8266
 void writeBlock(uint16_t color, uint32_t repeat)
@@ -4096,6 +4038,7 @@ void writeBlock(uint16_t color, uint32_t repeat)
 
   SPI1U = SPIUMOSI | SPIUDUPLEX | SPIUSSE;
 }
+
 #else // Now the code for ESP32 and ILI9488
 
 void writeBlock(uint16_t color, uint32_t repeat)
@@ -4166,6 +4109,49 @@ void writeBlock(uint16_t color, uint32_t repeat)
 }
 #endif
 
+#elif defined (ESP8266)
+void writeBlock(uint16_t color, uint32_t repeat)
+{
+  uint16_t color16 = (color >> 8) | (color << 8);
+  uint32_t color32 = color16 | color16 << 16;
+  bool reg_set = false;
+  SPI1U = SPIUMOSI | SPIUSSE;
+
+  if (repeat > 31)
+  {
+    SPI1U1 = BLOCK512_MASK;
+    while(repeat>31)
+    {
+      if (!reg_set) {
+        for (uint32_t i = 0; i < 16; i++) ESP8266_REG(0x140 + (i << 2)) = color32;
+        reg_set = true;
+      }
+      SPI1CMD |= SPIBUSY;
+#if defined SPI_FREQUENCY && (SPI_FREQUENCY == 80000000)
+      if(SPI1CMD & SPIBUSY) // added to sync with flag change
+#endif
+      repeat -= 32;
+      while(SPI1CMD & SPIBUSY) {}
+    }
+  }
+
+  if (repeat)
+  {
+    SPI1U1 = BLOCK_MASK | (((repeat << 4) - 1) << SPILMOSI);
+    if (!reg_set) {
+      for (uint32_t i = 0; i < ((repeat + 1) / 2); i++) ESP8266_REG(0x140 + (i << 2)) = color32;
+      reg_set = true;
+    }
+    SPI1CMD |= SPIBUSY;
+#if defined SPI_FREQUENCY && (SPI_FREQUENCY == 80000000)
+      if(SPI1CMD & SPIBUSY) // added to sync with flag change
+#endif
+    while(SPI1CMD & SPIBUSY) {}
+  }
+
+  SPI1U = SPIUMOSI | SPIUDUPLEX | SPIUSSE;
+}
+
 #else // Low level register based ESP32 code for 16 bit colour SPI TFTs
 
 void writeBlock(uint16_t color, uint32_t repeat)
@@ -4179,23 +4165,20 @@ void writeBlock(uint16_t color, uint32_t repeat)
 
     while(repeat>31)
     {
-      while (READ_PERI_REG(SPI_CMD_REG(SPI_NUM))&SPI_USR);
-      for (uint32_t i=0; i<16; i++) WRITE_PERI_REG((SPI_W0_REG(SPI_NUM) + (i << 2)), color32);
+      for (uint32_t i = 0; i < 16; i++) WRITE_PERI_REG((SPI_W0_REG(SPI_NUM) + (i << 2)), color32);
       SET_PERI_REG_MASK(SPI_CMD_REG(SPI_NUM), SPI_USR);
       repeat -= 32;
+      while (READ_PERI_REG(SPI_CMD_REG(SPI_NUM))&SPI_USR);
     }
-    while (READ_PERI_REG(SPI_CMD_REG(SPI_NUM))&SPI_USR);
   }
 
   if (repeat)
   {
     WRITE_PERI_REG((SPI_MOSI_DLEN_REG(SPI_NUM)), MASK|((((repeat << 4) - 1) & SPI_USR_MOSI_DBITLEN)<<(SPI_USR_MOSI_DBITLEN_S)));
-    repeat = (repeat + 1) >> 1;
-    for (uint32_t i=0; i<repeat; i++) WRITE_PERI_REG((SPI_W0_REG(SPI_NUM) + (i << 2)), color32);
+    for (uint32_t i=0; i<((repeat + 1) >> 1); i++) WRITE_PERI_REG((SPI_W0_REG(SPI_NUM) + (i << 2)), color32);
     SET_PERI_REG_MASK(SPI_CMD_REG(SPI_NUM), SPI_USR);
     while (READ_PERI_REG(SPI_CMD_REG(SPI_NUM))&SPI_USR);
   }
-
 }
 #endif
 
