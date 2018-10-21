@@ -160,8 +160,6 @@ TFT_eSPI::TFT_eSPI(int16_t w, int16_t h)
   addr_re = 0xFFFF;
   addr_cs = 0xFFFF;
   addr_ce = 0xFFFF;
-  addr_row = 0xFFFF;
-  addr_col = 0xFFFF;
 
 #ifdef LOAD_GLCD
   fontsloaded  = 0x0002; // Bit 1 set
@@ -423,8 +421,6 @@ void TFT_eSPI::setRotation(uint8_t m)
   addr_re = 0xFFFF;
   addr_cs = 0xFFFF;
   addr_ce = 0xFFFF;
-  addr_row = 0xFFFF;
-  addr_col = 0xFFFF;
 }
 
 
@@ -2185,7 +2181,7 @@ inline void TFT_eSPI::setAddrWindow(int32_t xs, int32_t ys, int32_t xe, int32_t 
     tft_Write_C8(0x03);
     tft_Write_8(xs&0xff);
 
-    addr_col = addr_cs = xs;
+    addr_cs = xs;
   }
 
   if (addr_ce != xe) {
@@ -2204,7 +2200,7 @@ inline void TFT_eSPI::setAddrWindow(int32_t xs, int32_t ys, int32_t xe, int32_t 
     tft_Write_C8(0x07);
     tft_Write_8(ys&0xff);
 
-    addr_row = addr_rs = ys;
+    addr_rs = ys;
   }
 
   if (addr_re != ye) {
@@ -2234,7 +2230,7 @@ inline void TFT_eSPI::setAddrWindow(int32_t xs, int32_t ys, int32_t xe, int32_t 
     tft_Write_C8(M_AP_X);
     tft_Write_16(xs);
 
-    addr_col = addr_cs = xs;
+    addr_cs = xs;
   }
 
   if (addr_ce != xe) {
@@ -2251,7 +2247,7 @@ inline void TFT_eSPI::setAddrWindow(int32_t xs, int32_t ys, int32_t xe, int32_t 
     tft_Write_C8(M_AP_Y);
     tft_Write_16(ys);
 
-    addr_row = addr_rs = ys;
+    addr_rs = ys;
   }
 
   if (addr_re != ye) {
@@ -2279,7 +2275,7 @@ inline void TFT_eSPI::setAddrWindow(int32_t xs, int32_t ys, int32_t xe, int32_t 
     tft_Write_C8(ILI9225_RAM_ADDR_SET1);
     tft_Write_16(xs);
 
-    addr_col = addr_cs = xs;
+    addr_cs = xs;
   }
 
   if (addr_ce != xe) {
@@ -2296,7 +2292,7 @@ inline void TFT_eSPI::setAddrWindow(int32_t xs, int32_t ys, int32_t xe, int32_t 
     tft_Write_C8(ILI9225_RAM_ADDR_SET2);
     tft_Write_16(ys);
 
-    addr_row = addr_rs = ys;
+    addr_rs = ys;
   }
 
   if (addr_re != ye) {
@@ -2323,7 +2319,7 @@ inline void TFT_eSPI::setAddrWindow(int32_t xs, int32_t ys, int32_t xe, int32_t 
     tft_Write_8(SSD1331_CMD_SETCOLUMN);
     tft_Write_8_8(xs, xe);
 
-    addr_col = addr_cs = xs;
+    addr_cs = xs;
     addr_ce = xe;
   }
 
@@ -2332,7 +2328,7 @@ inline void TFT_eSPI::setAddrWindow(int32_t xs, int32_t ys, int32_t xe, int32_t 
     tft_Write_8(SSD1331_CMD_SETROW);
     tft_Write_8_8(ys, ye);
 
-    addr_row = addr_rs = ys;
+    addr_rs = ys;
     addr_re = ye;
   }
 
@@ -2350,7 +2346,7 @@ inline void TFT_eSPI::setAddrWindow(int32_t xs, int32_t ys, int32_t xe, int32_t 
     tft_Write_C8(SSD1351_CMD_SETCOLUMN);
     tft_Write_8_8(xs, xe);
 
-    addr_col = addr_cs = xs;
+    addr_cs = xs;
     addr_ce = xe;
   }
 
@@ -2359,7 +2355,7 @@ inline void TFT_eSPI::setAddrWindow(int32_t xs, int32_t ys, int32_t xe, int32_t 
     tft_Write_C8(SSD1351_CMD_SETROW);
     tft_Write_8_8(ys, ye);
 
-    addr_row = addr_rs = ys;
+    addr_rs = ys;
     addr_re = ye;
   }
 
@@ -2375,7 +2371,7 @@ inline void TFT_eSPI::setAddrWindow(int32_t xs, int32_t ys, int32_t xe, int32_t 
     uint8_t xBin[] = { 0, (uint8_t) (x0>>8), 0, (uint8_t) (x0>>0), 0, (uint8_t) (x1>>8), 0, (uint8_t) (x1>>0), };
     SPI.writePattern(&xBin[0], 8, 1);
 
-    addr_col = addr_cs = xs;
+    addr_cs = xs;
     addr_ce = xe;
   }
 
@@ -2386,7 +2382,7 @@ inline void TFT_eSPI::setAddrWindow(int32_t xs, int32_t ys, int32_t xe, int32_t 
     uint8_t yBin[] = { 0, (uint8_t) (y0>>8), 0, (uint8_t) (y0>>0), 0, (uint8_t) (y1>>8), 0, (uint8_t) (y1>>0), };
     SPI.writePattern(&yBin[0], 8, 1);
 
-    addr_row = addr_rs = ys;
+    addr_rs = ys;
     addr_re = ye;
   }
 
@@ -2408,7 +2404,7 @@ inline void TFT_eSPI::setAddrWindow(int32_t xs, int32_t ys, int32_t xe, int32_t 
     tft_write_16_16(xs, xe);
 #endif
 
-    addr_col = addr_cs = xs;
+    addr_cs = xs;
     addr_ce = xe;
   }
 
@@ -2424,7 +2420,7 @@ inline void TFT_eSPI::setAddrWindow(int32_t xs, int32_t ys, int32_t xe, int32_t 
     tft_write_16_16(ys, ye);
 #endif
 
-    addr_row = addr_rs = ys;
+    addr_rs = ys;
     addr_re = ye;
   }
 
@@ -2460,7 +2456,7 @@ void TFT_eSPI::drawPixel(uint32_t x, uint32_t y, uint32_t color)
   tft_Write_Color(color);
 #else
   // No need to send x if it has not changed (speeds things up)
-  if (addr_col != x) {
+  if (addr_cs != x) {
 
     tft_Write_C8(TFT_CASET);
 
@@ -2472,11 +2468,11 @@ void TFT_eSPI::drawPixel(uint32_t x, uint32_t y, uint32_t color)
     tft_write_16_16(x, x);
 #endif
 
-    addr_col = x;
+    addr_cs = x;
   }
 
   // No need to send y if it has not changed (speeds things up)
-  if (addr_row != y) {
+  if (addr_rs != y) {
     tft_Write_C8(TFT_PASET);
 
 #if defined (RPI_ILI9486_DRIVER) // This is for the RPi display that needs 16 bits per byte
@@ -2487,7 +2483,7 @@ void TFT_eSPI::drawPixel(uint32_t x, uint32_t y, uint32_t color)
     tft_write_16_16(y, y);
 #endif
 
-    addr_row = y;
+    addr_rs = y;
   }
 
   tft_Write_C8(TFT_RAMWR);
