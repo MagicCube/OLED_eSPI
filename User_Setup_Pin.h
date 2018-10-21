@@ -5,7 +5,7 @@
       #define TFT_CS   PIN_D8    // Chip select control pin D8
     #endif
     #ifndef TFT_DC
-      #define TFT_DC   PIN_D3    // Data Command control pin
+      #define TFT_DC   PIN_D1    // Data Command control pin
     #endif
     #ifndef TFT_RST
       #define TFT_RST  PIN_D4   // Reset pin
