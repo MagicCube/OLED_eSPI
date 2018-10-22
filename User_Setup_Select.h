@@ -47,7 +47,6 @@
 // #include <User_Setups/Setup_ST7789.h>            // Setup file for ST7789
 // #include <User_Setups/Setup_Template.h>
 
-
 #endif // USER_SETUP_LOADED
 
 #include <User_Setup_Pin.h>            // Setup file for pins connected
