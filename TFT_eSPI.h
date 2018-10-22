@@ -259,7 +259,7 @@
   #define tft_Write_32(C) SPI.write32(C)
 #endif
 
-#if defined (ILI9486_DRIVER) || defined (ILI9488_DRIVER) // 16 bit colour converted to 3 bytes for 18 bit RGB
+#ifdef WRITE_18_BIT_COLOR // 16 bit colour converted to 3 bytes for 18 bit RGB
   // Convert 16 bit colour to 18 bit and write in 3 bytes
   #define tft_Write_Color(C) tft_Write_8((C & 0xF800) >> 8); \
                              tft_Write_8((C & 0x07E0) >> 3); \
@@ -281,6 +281,7 @@
   const uint32_t D32_MASK = MASK | (31 << SPILMOSI) | (31 << SPILMISO);
   const uint32_t D256_MASK = MASK | (255 << SPILMOSI) | (255 << SPILMISO);
   const uint32_t BLOCK_MASK = SPI1U1 & (~(SPIMMOSI << SPILMOSI));
+  const uint32_t BLOCK504_MASK = BLOCK_MASK | (503 << SPILMOSI);
   const uint32_t BLOCK512_MASK = BLOCK_MASK | (511 << SPILMOSI);
 
   #define write_8(C) SPI1U1 = D8_MASK; SPI1W0 = C; SPI1CMD |= SPIBUSY; while(SPI1CMD & SPIBUSY) {}
@@ -298,7 +299,7 @@
   const uint32_t D16_MASK = MASK|(((15) & SPI_USR_MOSI_DBITLEN)<<(SPI_USR_MOSI_DBITLEN_S));
   const uint32_t D32_MASK = MASK|(((31) & SPI_USR_MOSI_DBITLEN)<<(SPI_USR_MOSI_DBITLEN_S));
   const uint32_t D256_MASK = MASK|(((255) & SPI_USR_MOSI_DBITLEN)<<(SPI_USR_MOSI_DBITLEN_S));
-  const uint32_t D480_MASK = MASK|(((479) & SPI_USR_MOSI_DBITLEN)<<(SPI_USR_MOSI_DBITLEN_S));
+  const uint32_t D504_MASK = MASK|(((503) & SPI_USR_MOSI_DBITLEN)<<(SPI_USR_MOSI_DBITLEN_S));
   const uint32_t D512_MASK = MASK|(((511) & SPI_USR_MOSI_DBITLEN)<<(SPI_USR_MOSI_DBITLEN_S));
 
   #define write_8(C) \

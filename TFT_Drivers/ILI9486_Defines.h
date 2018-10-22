@@ -3,6 +3,9 @@
 #define TFT_WIDTH  320
 #define TFT_HEIGHT 480
 
+// 16 bit colour converted to 3 bytes for 18 bit RGB
+#define WRITE_18_BIT_COLOR
+
 // Delay between some initialisation commands
 #define TFT_INIT_DELAY 0x80 // Not used unless commandlist invoked
 
