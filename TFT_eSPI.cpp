@@ -26,9 +26,6 @@
   #define SUPPORT_TRANSACTIONS
 #endif
 
-// Fast block write prototype
-void writeBlock(uint16_t color, uint32_t repeat);
-
 // Byte read prototype
 uint8_t readByte(void);
 
@@ -565,11 +562,7 @@ void TFT_eSPI::pushImage(int32_t x, int32_t y, uint32_t w, uint32_t h, uint16_t 
 
   data += dx + dy * w;
 
-  while (dh--)
-  {
-    pushColors(data, dw, _swapBytes);
-    data += w;
-  }
+  pushColors(data, dw * dh, _swapBytes);
 
   CS_H;
 
@@ -2174,9 +2167,16 @@ inline void TFT_eSPI::setAddrWindow(int32_t xs, int32_t ys, int32_t xe, int32_t 
   ye+=rowstart;
 #endif
 
-#ifdef HX8352C_DRIVER
   CS_L;
 
+  setAddrWindowCore(xs, ys, xe, ye);
+
+  //spi_end();
+}
+
+inline void TFT_eSPI::setAddrWindowCore(int32_t xs, int32_t ys, int32_t xe, int32_t ye)
+{
+#ifdef HX8352C_DRIVER
   // Column addr set
   if (addr_cs != xs) {
     tft_Write_C8(0x02);
@@ -2224,8 +2224,6 @@ inline void TFT_eSPI::setAddrWindow(int32_t xs, int32_t ys, int32_t xe, int32_t 
     swap_coord(xe, ye);
   }
 
-  CS_L;
-
   // Column addr set
   if (addr_cs != xs) {
     tft_Write_C8(MX1_ADDR);
@@ -2268,8 +2266,6 @@ inline void TFT_eSPI::setAddrWindow(int32_t xs, int32_t ys, int32_t xe, int32_t 
     swap_coord(xs, ys);
     swap_coord(xe, ye);
   }
-
-  CS_L;
 
   // Column addr set
   if (addr_cs != xs) {
@@ -2315,8 +2311,6 @@ inline void TFT_eSPI::setAddrWindow(int32_t xs, int32_t ys, int32_t xe, int32_t 
   }
 
   // Column addr set
-  CS_L;
-
   DC_C;
   if ((addr_cs != xs) || (addr_ce != xe)) {
     tft_Write_8(SSD1331_CMD_SETCOLUMN);
@@ -2342,8 +2336,6 @@ inline void TFT_eSPI::setAddrWindow(int32_t xs, int32_t ys, int32_t xe, int32_t 
     swap_coord(xe, ye);
   }
 
-  CS_L;
-
   // Column addr set
   if ((addr_cs != xs) || (addr_ce != xe)) {
     tft_Write_C8(SSD1351_CMD_SETCOLUMN);
@@ -2365,8 +2357,6 @@ inline void TFT_eSPI::setAddrWindow(int32_t xs, int32_t ys, int32_t xe, int32_t 
   tft_Write_C8(SSD1351_CMD_WRITERAM);
 
 #elif defined (RPI_ILI9486_DRIVER)
-  CS_L;
-
   if ((addr_cs != xs) || (addr_ce != xe)) {
     // Column addr set
     tft_write_C16(TFT_CASET<<8);
@@ -2393,8 +2383,6 @@ inline void TFT_eSPI::setAddrWindow(int32_t xs, int32_t ys, int32_t xe, int32_t 
   tft_write_C16(TFT_RAMWR<<8);
 
 #else
-  CS_L;
-
   if ((addr_cs != xs) || (addr_ce != xe)) {
     // Column addr set
     tft_Write_C8(TFT_CASET);
@@ -2431,8 +2419,6 @@ inline void TFT_eSPI::setAddrWindow(int32_t xs, int32_t ys, int32_t xe, int32_t 
   tft_Write_C8(TFT_RAMWR);
 
 #endif // end
-
-  //spi_end();
 }
 
 
@@ -2454,45 +2440,8 @@ void TFT_eSPI::drawPixel(uint32_t x, uint32_t y, uint32_t color)
 
   CS_L;
 
-#if defined (HX8352C_DRIVER) || defined (ILI9225_DRIVER) || defined (SEPS525_DRIVER) || defined (SSD1331_DRIVER) || defined (SSD1351_DRIVER)
-  setAddrWindow(x, y, x, y);
+  setAddrWindowCore(x, y, x, y);
   tft_Write_Color(color);
-#else
-  // No need to send x if it has not changed (speeds things up)
-  if (addr_cs != x) {
-
-    tft_Write_C8(TFT_CASET);
-
-#if defined (RPI_ILI9486_DRIVER) // This is for the RPi display that needs 16 bits per byte
-    uint8_t cBin[] = { 0, (uint8_t) (x>>8), 0, (uint8_t) (x>>0)};
-    SPI.writePattern(&cBin[0], 4, 2);
-#else
-    // Load the two coords as a 32 bit value and shift in one go
-    tft_write_16_16(x, x);
-#endif
-
-    addr_cs = x;
-  }
-
-  // No need to send y if it has not changed (speeds things up)
-  if (addr_rs != y) {
-    tft_Write_C8(TFT_PASET);
-
-#if defined (RPI_ILI9486_DRIVER) // This is for the RPi display that needs 16 bits per byte
-    uint8_t cBin[] = { 0, (uint8_t) (y>>8), 0, (uint8_t) (y>>0)};
-    SPI.writePattern(&cBin[0], 4, 2);
-#else
-    // Load the two coords as a 32 bit value and shift in one go
-    tft_write_16_16(y, y);
-#endif
-
-    addr_rs = y;
-  }
-
-  tft_Write_C8(TFT_RAMWR);
-
-  tft_Write_Color(color);
-#endif
 
   CS_H;
 
@@ -2532,48 +2481,10 @@ void TFT_eSPI::pushColor(uint16_t color, uint32_t len)
   uint8_t colorBin[] = { (uint8_t) (color >> 8), (uint8_t) color };
   if(len) SPI.writePattern(&colorBin[0], 2, 1); len--;
   while(len--) {WR_L; WR_H;}
-#else
-  #if defined (ESP32_PARALLEL)
+#elif defined (ESP32_PARALLEL)
     while (len--) {tft_Write_Color(color);}
-  #else
-    writeBlock(color, len);
-  #endif
-#endif
-
-  CS_H;
-
-  spi_end();
-}
-
-/***************************************************************************************
-** Function name:           pushColors
-** Description:             push an array of pixels for 16 bit raw image drawing
-***************************************************************************************/
-// Assumed that setWindow() has previously been called
-
-void TFT_eSPI::pushColors(uint8_t *data, uint32_t len)
-{
-  spi_begin();
-
-  CS_L;
-
-#if defined (RPI_WRITE_STROBE)
-  while ( len >=64 ) {SPI.writePattern(data, 64, 1); data += 64; len -= 64; }
-  if (len) SPI.writePattern(data, len, 1);
 #else
-  #ifdef ESP32_PARALLEL
-    while (len--) {tft_Write_8(*data); data++;}
-  #elif defined (WRITE_18_BIT_COLOR)
-    uint16_t color;
-    while (len>1) {color = (*data++) | ((*data++)<<8); tft_Write_Color(color); len-=2;}
-  #else
-    #if (SPI_FREQUENCY == 80000000)
-      while ( len >=64 ) {SPI.writePattern(data, 64, 1); data += 64; len -= 64; }
-      if (len) SPI.writePattern(data, len, 1);
-    #else
-      SPI.writeBytes(data, len);
-    #endif
-  #endif
+  writeBlock(color, len);
 #endif
 
   CS_H;
@@ -2592,86 +2503,55 @@ void TFT_eSPI::pushColors(uint16_t *data, uint32_t len, bool swap)
 
   CS_L;
 
-#if defined (ESP32) || defined (WRITE_18_BIT_COLOR)
-  #if defined (ESP32_PARALLEL) || defined (WRITE_18_BIT_COLOR)
-    if (swap) while ( len-- ) {tft_Write_Color(*data); data++;}
-    else while ( len-- ) {tft_Write_ColorS(*data); data++;}
-  #else
-    if (swap) SPI.writePixels(data,len<<1);
-    else SPI.writeBytes((uint8_t*)data,len<<1);
-  #endif
-#else
+#if defined (ESP32_PARALLEL) || defined (WRITE_18_BIT_COLOR)
+    if (swap) while ( len-- ) { tft_Write_Color(*data); data++; }
+    else while ( len-- ) { tft_Write_ColorS(*data); data++; }
+#elif defined (ESP32)
+    if (swap) SPI.writePixels(data, len << 1);
+    else SPI.writeBytes((uint8_t*)data, len << 1);
+#else // ESP8266
 
-  uint32_t color[8];
+  SPI1U1 = D512_MASK;
 
-  SPI1U1 = D256_MASK;
-
-  while(len>15)
+  while (len > 31)
   {
-
     if (swap)
     {
-      uint32_t i = 0;
-      while(i<8)
-      {
-        color[i]  = (*data >> 8) | (uint16_t)(*data << 8);
-        data++;
-        color[i] |= ((*data >> 8) | (*data << 8)) << 16;
-        data++;
-        i++;
+      for (uint32_t i = 0; i < 16; i++) {
+        SPI1W(i) = ((*data >> 8) | (uint16_t)(*data++ << 8)) | (((*data >> 8) | (*data++ << 8)) << 16);
       }
     }
     else
     {
-      memcpy(color,data,32);
-      data+=16;
+      for (uint32_t i = 0; i < 16; i++) {
+        SPI1W(i) = (*data++) | ((*data++) << 16);
+      }
     }
 
-    len -= 16;
-
-    // ESP8266 wait time here at 40MHz SPI is ~5.45us
-    while(SPI1CMD & SPIBUSY) {}
-    SPI1W0 = color[0];
-    SPI1W1 = color[1];
-    SPI1W2 = color[2];
-    SPI1W3 = color[3];
-    SPI1W4 = color[4];
-    SPI1W5 = color[5];
-    SPI1W6 = color[6];
-    SPI1W7 = color[7];
     SPI1CMD |= SPIBUSY;
+    len -= 32;
+    while(SPI1CMD & SPIBUSY) {}
   }
 
   if(len)
   {
     uint32_t bits = (len*16-1); // bits left to shift - 1
+    SPI1U1 = MASK | (bits << SPILMOSI) | (bits << SPILMISO);
     if (swap)
     {
-      uint16_t* ptr = (uint16_t*)color;
-      while(len--)
-      {
-        *ptr++ = (*(data) >> 8) | (uint16_t)(*(data) << 8);
-        data++;
+      for (uint32_t i = 0; i < ((len + 1) / 2); i++) {
+        SPI1W(i) = ((*data >> 8) | (uint16_t)(*data++ << 8)) | (((*data >> 8) | (*data++ << 8)) << 16);
       }
     }
     else
     {
-      memcpy(color,data,len<<1);
+      for (uint32_t i = 0; i < ((len + 1) / 2); i++) {
+        SPI1W(i) = (*data++) | ((*data++) << 16);
+      }
     }
-    while(SPI1CMD & SPIBUSY) {}
-    SPI1U1 = MASK | (bits << SPILMOSI) | (bits << SPILMISO);
-    SPI1W0 = color[0];
-    SPI1W1 = color[1];
-    SPI1W2 = color[2];
-    SPI1W3 = color[3];
-    SPI1W4 = color[4];
-    SPI1W5 = color[5];
-    SPI1W6 = color[6];
-    SPI1W7 = color[7];
     SPI1CMD |= SPIBUSY;
+    while(SPI1CMD & SPIBUSY) {}
   }
-
-  while(SPI1CMD & SPIBUSY) {}
 
 #endif
 
@@ -3976,7 +3856,7 @@ void TFT_eSPI::setTextFont(uint8_t f)
 //       TFT_eSPI       98.06%              97.59%          94.24%
 //       Adafruit_GFX   19.62%              14.31%           7.94%
 //
-void writeBlock(uint16_t color, uint32_t repeat)
+inline void TFT_eSPI::writeBlock(uint16_t color, uint32_t repeat)
 {
 #if defined (WRITE_18_BIT_COLOR)
   // Split out the colours
@@ -4085,7 +3965,7 @@ void writeBlock(uint16_t color, uint32_t repeat)
   #else // ESP32
     WRITE_PERI_REG((SPI_MOSI_DLEN_REG(SPI_NUM)), D512_MASK);
   #endif
-    while(repeat>31)
+    while(repeat > 31)
     {
   #if defined (ESP8266)
       if (!reg_set) {

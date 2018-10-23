@@ -279,7 +279,7 @@
   const uint32_t D8_MASK = MASK | (7 << SPILMOSI) | (7 << SPILMISO);
   const uint32_t D16_MASK = MASK | (15 << SPILMOSI) | (15 << SPILMISO);
   const uint32_t D32_MASK = MASK | (31 << SPILMOSI) | (31 << SPILMISO);
-  const uint32_t D256_MASK = MASK | (255 << SPILMOSI) | (255 << SPILMISO);
+  const uint32_t D512_MASK = MASK | (511 << SPILMOSI) | (511 << SPILMISO);
   const uint32_t BLOCK_MASK = SPI1U1 & (~(SPIMMOSI << SPILMOSI));
   const uint32_t BLOCK504_MASK = BLOCK_MASK | (503 << SPILMOSI);
   const uint32_t BLOCK512_MASK = BLOCK_MASK | (511 << SPILMOSI);
@@ -298,7 +298,6 @@
   const uint32_t D8_MASK = MASK|(((7) & SPI_USR_MOSI_DBITLEN)<<(SPI_USR_MOSI_DBITLEN_S));
   const uint32_t D16_MASK = MASK|(((15) & SPI_USR_MOSI_DBITLEN)<<(SPI_USR_MOSI_DBITLEN_S));
   const uint32_t D32_MASK = MASK|(((31) & SPI_USR_MOSI_DBITLEN)<<(SPI_USR_MOSI_DBITLEN_S));
-  const uint32_t D256_MASK = MASK|(((255) & SPI_USR_MOSI_DBITLEN)<<(SPI_USR_MOSI_DBITLEN_S));
   const uint32_t D504_MASK = MASK|(((503) & SPI_USR_MOSI_DBITLEN)<<(SPI_USR_MOSI_DBITLEN_S));
   const uint32_t D512_MASK = MASK|(((511) & SPI_USR_MOSI_DBITLEN)<<(SPI_USR_MOSI_DBITLEN_S));
 
@@ -710,7 +709,6 @@ class TFT_eSPI : public Print {
 
   void     setAddrWindow(int32_t xs, int32_t ys, int32_t xe, int32_t ye);
 
-
   size_t   write(uint8_t);
 
   void     getSetup(setup_t& tft_settings); // Sketch provides the instance to populate
@@ -745,6 +743,13 @@ class TFT_eSPI : public Print {
 
   uint32_t lastColor = 0xFFFF;
 
+  inline void setAddrWindowCore(int32_t xs, int32_t ys, int32_t xe, int32_t ye) __attribute__((always_inline));
+
+#if defined (ESP8266)
+  inline void writeBlock(uint16_t color, uint32_t repeat) __attribute__((always_inline));
+#else
+  void writeBlock(uint16_t color, uint32_t repeat);
+#endif
 
  protected:
 
