@@ -139,7 +139,13 @@ void loop(void)
 
   tft.setTextSize(1);
   tft.setTextColor(TFT_WHITE);
+#if defined (ESP8266)
   tft.println(F("SPI TFT on ESP8266"));
+#elif defined (ESP32)
+  tft.println(F("SPI TFT on ESP32"));
+#else
+  tft.println(F("SPI TFT"));
+#endif
   tft.println(F(""));
   tft.setTextSize(1);
   tft.setTextColor(tft.color565(0x80, 0x80, 0x80));
