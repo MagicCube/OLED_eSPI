@@ -2314,7 +2314,7 @@ inline void TFT_eSPI::setAddrWindowCore(int32_t xs, int32_t ys, int32_t xe, int3
   DC_C;
   if ((addr_cs != xs) || (addr_ce != xe)) {
     tft_Write_8(SSD1331_CMD_SETCOLUMN);
-    tft_Write_8_8(xs, xe);
+    tft_write_8_8(xs, xe);
 
     addr_cs = xs;
     addr_ce = xe;
@@ -2323,7 +2323,7 @@ inline void TFT_eSPI::setAddrWindowCore(int32_t xs, int32_t ys, int32_t xe, int3
   // Row addr set
   if ((addr_rs != ys) || (addr_re != ye)) {
     tft_Write_8(SSD1331_CMD_SETROW);
-    tft_Write_8_8(ys, ye);
+    tft_write_8_8(ys, ye);
 
     addr_rs = ys;
     addr_re = ye;
@@ -2339,7 +2339,7 @@ inline void TFT_eSPI::setAddrWindowCore(int32_t xs, int32_t ys, int32_t xe, int3
   // Column addr set
   if ((addr_cs != xs) || (addr_ce != xe)) {
     tft_Write_C8(SSD1351_CMD_SETCOLUMN);
-    tft_Write_8_8(xs, xe);
+    tft_write_8_8(xs, xe);
 
     addr_cs = xs;
     addr_ce = xe;
@@ -2348,7 +2348,7 @@ inline void TFT_eSPI::setAddrWindowCore(int32_t xs, int32_t ys, int32_t xe, int3
   // Row addr set
   if ((addr_rs != ys) || (addr_re != ye)) {
     tft_Write_C8(SSD1351_CMD_SETROW);
-    tft_Write_8_8(ys, ye);
+    tft_write_8_8(ys, ye);
 
     addr_rs = ys;
     addr_re = ye;

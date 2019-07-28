@@ -319,7 +319,7 @@ WRITE_PERI_REG(SPI_W0_REG(SPI_NUM), C); \
 SET_PERI_REG_MASK(SPI_CMD_REG(SPI_NUM), SPI_USR); \
 while (READ_PERI_REG(SPI_CMD_REG(SPI_NUM))&SPI_USR)
 
-  #define tft_write_8_8(C, D) write_16((uint16_t)D << 8) | C)
+  #define tft_write_8_8(C, D) write_16(((uint16_t)D << 8) | C)
   #define tft_write_16_16(C, D) write_32((C >> 8) | (uint16_t)(C << 8) | ((uint8_t)(D >> 8)<<16 | (D << 24)))
 #else
   #define write_8(C) SPI.write(C)
